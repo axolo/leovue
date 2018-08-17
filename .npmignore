@@ -1,0 +1,7 @@
+# ignore all files
+/*
+
+# except npmjs.com need
+!/dist/
+!/README.md
+!/package.json

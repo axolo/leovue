@@ -1,0 +1,13 @@
+{
+  "name": "docs",
+  "version": "1.0.0",
+  "author": "Yueming Fang <zergdo@gmail.com>",
+  "scripts": {
+    "dev": "vuepress dev .",
+    "build": "vuepress build ."
+  },
+  "license": "MIT",
+  "dependencies": {
+    "vuepress": "^0.14.2"
+  }
+}
