@@ -21,7 +21,7 @@ module.exports = {
     repoLabel: 'GitHub',
     lastUpdated: '上次更新',
     nav: [
-      { text: '示例', link: '/labs/' }
+      { text: '示例', link: '/labs' }
     ],
     sidebar: [
       ['/', '首页'],

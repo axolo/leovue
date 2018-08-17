@@ -43,7 +43,7 @@ module.exports = {
     // Paths
     assetsRoot: path.resolve(__dirname, '../../docs/labs'),
     assetsSubDirectory: 'static',
-    assetsPublicPath: '/labs/',
+    assetsPublicPath: '/leovue/labs/',
 
     /**
      * Source Maps
