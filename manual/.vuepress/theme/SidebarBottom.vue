@@ -1,7 +1,7 @@
 <template>
   <div class="sidebar-bottom">
-    <div class="coding-net">
-      Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a>
+    <div class="pages">
+      Hosted by <a href="https://pages.github.com" style="font-weight: bold">GitHub Pages</a>
     </div>
     <div class="google-ads">
       <ins class="adsbygoogle"
@@ -19,7 +19,7 @@ export default {
   data() {
     return {
       js: [
-        // { src: '/leovue/js/baidu-hm.js' },
+        { src: '/leovue/js/baidu-hm.js' },
         { src: '/leovue/js/google-ads.js' }
       ]
     }
@@ -40,7 +40,7 @@ export default {
 </script>
 
 <style scoped>
-.coding-net {
+.pages {
   border-top: 1px solid #E7EAED;
   font-size: 0.9em;
   text-align: center;
