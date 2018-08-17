@@ -11,7 +11,7 @@
 </template>
 
 <script>
-import LeoLodop from '../../../src/components/LeoLodop'
+import { LeoLodop } from '../../../dist/leovue'
 export default {
   components: { LeoLodop },
   data() { return {
@@ -26,7 +26,7 @@ export default {
       "label": "accounts",
       "name": "A4竖版",
       "bio": "自适应纸张",
-      "url": "/leovue/labs/static/lodop/site-a4.html",
+      "url": window.location.pathname + "static/lodop/site-a4.html",
       "engine": "dot",
       "format": "TABLE",
       "params": {
@@ -41,7 +41,7 @@ export default {
       "label": "accounts",
       "name": "POS小票",
       "bio": "80mm热敏纸",
-      "url": "/leovue/labs/static/lodop/site-80mm.html",
+      "url": window.location.pathname + "static/lodop/site-80mm.html",
       "engine": "dot",
       "format": "HTM",
       "params": {

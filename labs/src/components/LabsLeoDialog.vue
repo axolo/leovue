@@ -8,7 +8,7 @@
 </template>
 
 <script>
-import LeoDialog from '../../../src/components/LeoDialog'
+import { LeoDialog } from '../../../dist/leovue'
 export default {
   components: { LeoDialog },
   data() {
