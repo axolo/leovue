@@ -3,17 +3,17 @@
   "short_name": "LeoVue",
   "icons": [
     {
-      "src": "/docs/icons/192x192.png",
+      "src": "/leovue/icons/192x192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/docs/icons/512x512.png",
+      "src": "/leovue/icons/512x512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
   ],
-  "start_url": "/docs/index.html",
+  "start_url": "/leovue/index.html",
   "display": "standalone",
   "background_color": "#fff",
   "theme_color": "#3eaf7c"
