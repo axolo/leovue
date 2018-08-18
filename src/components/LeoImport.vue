@@ -1,31 +1,31 @@
 <template>
   <div>
     <leo-dialog :title="title" :visible="visible" @close="close">
-      <div class="main">
-        <div class="file">
+      <div class="leo-main">
+        <div class="leo-file">
           <input type="file" ref="file" @change="change">
-          <span class="tips"><a v-bind:href="template">模板</a></span>
+          <span class="leo-tips"><a v-bind:href="template">模板</a></span>
         </div>
         <div v-if="file && format && rows">
-          <div class="tips">
-            <table>
+          <div class="leo-tips">
+            <table class="leo-table">
               <tbody>
-                <tr><td class="th">文件名</td><td>{{file.name}}</td></tr>
-                <tr><td class="th">大小</td><td>{{file.size}} (Bytes)</td></tr>
-                <tr><td class="th">修改时间</td><td>{{file.lastModified}}</td></tr>
-                <tr><td class="th">MIME</td><td>{{file.type}}</td></tr>
-                <tr><td class="th">MD5</td><td>{{file.md5}}</td></tr>
-                <tr><td class="th">有效行数</td><td>{{rows}}（首行不计）</td></tr>
+                <tr><td class="leo-th">文件名</td><td class="leo-td">{{file.name}}</td></tr>
+                <tr><td class="leo-th">大小</td><td class="leo-td">{{file.size}} (Bytes)</td></tr>
+                <tr><td class="leo-th">修改时间</td><td class="leo-td">{{file.lastModified}}</td></tr>
+                <tr><td class="leo-th">MIME</td><td class="leo-td">{{file.type}}</td></tr>
+                <tr><td class="leo-th">MD5</td><td class="leo-td">{{file.md5}}</td></tr>
+                <tr><td class="leo-th">有效行数</td><td class="leo-td">{{rows}}（首行不计）</td></tr>
               </tbody>
             </table>
           </div>
-          <div class="import">
-            <button @click="insert">导入</button>
-            <span class="message">仅读取首个工作簿，请仔细核对以上数据</span>
+          <div class="leo-import">
+            <button class="leo-button" @click="insert">导入</button>
+            <span class="leo-message">仅读取首个工作簿，请仔细核对以上数据</span>
           </div>
         </div>
         <div v-else>
-          <div class="tips">{{loading}}</div>
+          <div class="leo-tips">{{loading}}</div>
         </div>
       </div>
     </leo-dialog>
@@ -38,6 +38,7 @@ import browserMd5File from 'browser-md5-file'
 import moment from 'moment'
 import LeoDialog from './LeoDialog'
 export default {
+  name: 'LeoImport',
   components: { LeoDialog },
   props: {
     title: { type: String },
@@ -60,6 +61,7 @@ export default {
     },
     insert() {
       this.$emit('insert', this.data)
+      this.close()
     },
     change(e) {
       this.rows = 0
@@ -102,38 +104,40 @@ export default {
 </script>
 
 <style scoped>
-button {
+.leo-button {
   border-radius: 3px;
   height: 24px;
 }
-.main {
+.leo-main {
   padding: 10px;
 }
-.tips {
+.leo-tips {
   margin: 5px 0;
   font-size: small;
   color: #8492a6;
 }
-.tips ol {
+.leo-tips ol {
   padding-left: 5px;
 }
-.import {
+.leo-import {
   margin-top: 5px;
 }
-.message {
+.leo-message {
   padding-left: 10px;
   font-size: small;
   color: #8492a6;
 }
-table {
+.leo-table {
   border-collapse: collapse;
   text-align: left
 }
-td {
+.leo-td {
   border: 1px solid darkgray;
   padding: 2px 5px;
 }
-td.th {
+.leo-th {
+  border: 1px solid darkgray;
+  padding: 2px 5px;
   text-align: center;
   font-weight: bold;
 }

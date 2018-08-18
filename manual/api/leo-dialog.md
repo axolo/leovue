@@ -1,6 +1,10 @@
 leo-dialog
 ==========
 
+示例
+----
+<labs-leo-dialog/>
+
 说明
 ----
 对话框。
@@ -14,20 +18,32 @@ leo-dialog
 ```vue
 <template>
   <div>
-    <button @click="open">leo-dialog对话框</button>
-    <leo-dialog :visible="visible" :title="'弹窗标题'" @close="close">
-      弹窗内容
+    <leo-dialog :visible="visible" :title="title" @close="close">
+      <div class="main">{{content}}</div>
     </leo-dialog>
+    <div>
+      <label for="title">标题</label>
+      <input type="text" name="title" v-model="title">
+    </div>
+    <div>
+      <label for="content">内容</label>
+      <input type="text" name="content" v-model="content">
+    </div>
+    <button @click="open">开启对话框</button>
   </div>
 </template>
 
 <script>
-import LeoDialog from '@axolo/leovue'
+import { LeoDialog } from '@axolo/leovue'
 export default {
   components: { LeoDialog },
-  data() { return {
-    visible: false
-  }},
+  data() {
+    return {
+      title: 'Hello',
+      content: 'LeoVue',
+      visible: false
+    }
+  },
   methods: {
     open() {
       this.visible = true
@@ -38,18 +54,24 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+  div {
+    margin: 5px;
+  }
+</style>
 ```
 
 属性
 ----
-|  名称   |  说明  |
-| ------- | ------ |
-| title   | 标题   |
-| visible | 可见性 |
+|  名称   |  类型   |  说明  | 默认值 | 必填 |
+| ------- | ------- | ------ | ------ | ---- |
+| title   | String  | 标题   | -      |      |
+| visible | Blooean | 可见性 | -      |      |
 
 
 方法
 ----
-| 名称  | 参数 |       说明        |
-| ----- | ---- | ----------------- |
-| close |      | 关闭`leo-dialong` |
+| 名称  |   值    |             说明              |
+| ----- | ------- | ----------------------------- |
+| close | `false` | 发送`fasle`给父组件关闭对话框 |

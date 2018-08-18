@@ -55,6 +55,7 @@ export default {
 table {
   border-collapse: collapse;
   text-align: center;
+  margin: 5px 0;
 }
 caption {
   font-size: large;

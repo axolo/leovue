@@ -1,14 +1,14 @@
 <template>
-  <div class="dialog_box" v-if="visible">
-    <div class="dialog">
-      <div class="header">
-        <span class="title">{{title}}</span>
-        <button class="close" @click="close">X</button>
+  <div class="leo-dialog-box" v-if="visible">
+    <div class="leo-dialog">
+      <div class="leo-header">
+        <span class="leo-title">{{title}}</span>
+        <button class="leo-close" @click="close">X</button>
       </div>
-      <div class="content">
+      <div class="leo-content">
         <slot></slot>
       </div>
-      <div class="footer">
+      <div class="leo-footer">
         <slot name="footer"></slot>
       </div>
     </div>
@@ -28,7 +28,7 @@ export default {
 </script>
 
 <style scoped>
-.dialog_box {
+.leo-dialog-box {
   background: rgba(0, 0, 0, 0.5);
   z-index: 100;
   position: fixed;
@@ -38,7 +38,7 @@ export default {
   height: 100%;
   text-align: center;
 }
-.dialog {
+.leo-dialog {
   position: relative;
   display: inline-block;
   top: 20vh;
@@ -51,29 +51,29 @@ export default {
   border-radius: 10px;
   word-wrap: break-word;
 }
-.header {
+.leo-header {
   vertical-align: middle;
   background-color: #43B17B;
 }
-.title {
+.leo-title {
   font-weight: bold;
   line-height: 175%;
   padding-left: 10px;
   color: #ffffff;
 }
-.close {
+.leo-close {
   border-radius: 25%;
   float: right;
   margin: 5px;
 }
-.footer {
+.leo-footer {
   padding: 2px;
   background-color: #43B17B;
   vertical-align: middle;
   color: #ffffff;
   font-size: small;
 }
-.content {
+.leo-content {
   padding: 5px;
 }
 </style>

@@ -1,9 +1,13 @@
 import LeoDialog from './components/LeoDialog'
 import LeoLodop from './components/LeoLodop'
+import LeoExport from './components/LeoExport'
+import LeoImport from './components/LeoImport'
 
 const components = [
   LeoDialog,
-  LeoLodop
+  LeoLodop,
+  LeoExport,
+  LeoImport
 ]
 
 const install = function (Vue, opts = {}) {
@@ -20,5 +24,7 @@ if (typeof window !== 'undefined' && window.Vue) {
 
 export {
   LeoDialog,
-  LeoLodop
+  LeoLodop,
+  LeoExport,
+  LeoImport
 }

@@ -1,5 +1,5 @@
 <template>
-  <div @click="download">
+  <div class="leo-export" @click="download">
     <slot></slot>
   </div>
 </template>
@@ -47,7 +47,7 @@ export default {
 </script>
 
 <style scoped>
-div {
+.leo-export {
   display: inline-block;
 }
 </style>

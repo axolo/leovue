@@ -3,8 +3,7 @@ LeoVue
 
 A Vue.js components lib by Leo.
 
-- [docs](https://axolo.github.io/leovue)
-- [labs](https://axolo.github.io/leovue/labs)
+- [LeoVue](https://axolo.github.io/leovue)
 
 
 Files
@@ -12,7 +11,6 @@ Files
 ```
 |-- dist          # npm publish
 |-- docs          # docs dist (Pages Service)
-|   `-- labs      # labs dist
 |-- manual        # docs src
 |-- labs          # labs src
 `-- src           # leovue src

@@ -1,9 +1,9 @@
 <template>
-  <div id="lodop">
+  <div>
     <leo-dialog :title="title" :visible="visible" @close='close'>
-      <div class="main">
-        <span class="label">打印模板：</span>
-        <select v-model="templateId" placeholder="请选择打印模板">
+      <div class="leo-main">
+        <span class="leo-label">打印模板：</span>
+        <select class="leo-select" v-model="templateId" placeholder="请选择打印模板">
           <option
             v-for="item in templates"
             :key="item.id"
@@ -11,8 +11,8 @@
             {{item.name}}（{{item.bio}}）
           </option>
         </select>
-        <button @click="print" title="打印">打印</button>
-        <div class="tips">
+        <button class="leo-button" @click="print" title="打印">打印</button>
+        <div class="leo-tips">
           <ol>
             <li>请根据建议选择相应的纸张，以免格式混乱。</li>
             <li>非专业人士切勿擅自修改打印模板。</li>
@@ -96,33 +96,28 @@ export default {
 </script>
 
 <style scoped>
-select {
+.leo-select {
   height: 24px;
   border-radius: 5px;
   margin-right: 5px;
 }
-button {
+.leo-button {
   border-radius: 3px;
   height: 24px;
 }
-.main {
+.leo-main {
   padding: 10px;
 }
-.item-bio {
-  float: right;
-  font-size: x-small;
-  color: #8492a6;
-}
-.label {
+.leo-label {
   font-size: small;
   color: #8492a6;
 }
-.tips {
+.leo-tips {
   margin: 5%;
   font-size: small;
   color: #8492a6;
 }
-.tips ol {
+.leo-tips ol {
   padding-left: 5px;
 }
 </style>

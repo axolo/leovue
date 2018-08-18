@@ -29,7 +29,7 @@
 </template>
 
 <script>
-import LeoLodop from '../../../src/components/LeoLodop'
+import { LeoLodop } from '../../../dist/leovue'
 export default {
   components: { LeoLodop },
   data() { return {

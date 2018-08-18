@@ -1,6 +1,10 @@
 leo-lodop
 =========
 
+示例
+----
+<labs-leo-lodop/>
+
 说明
 ----
 调用LODOP打印。[LODOP演示及文档](http://www.lodop.net/LodopDemo.html)细节不够完美，需要自行测试。如：
@@ -25,8 +29,24 @@ leo-lodop
 
 ```vue
 <template>
-  <div>
-    <button @click="print">leo-lodop打印</button>
+  <div id="leo-lodop">
+    <table>
+      <thead>
+        <tr>
+          <th>编号</th>
+          <th>名称</th>
+          <th>网址</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="item in data" :key="item.id">
+          <td>{{item.id}}</td>
+          <td>{{item.name}}</td>
+          <td>{{item.site}}</td>
+        </tr>
+      </tbody>
+    </table>
+    <button @click="print">打印</button>
     <leo-lodop
       :visible.sync="visible"
       :title="'网站列表'"
@@ -37,7 +57,7 @@ leo-lodop
 </template>
 
 <script>
-import LeoLodop from '@axolo/leovue'
+import { LeoLodop } from '@axolo/leovue'
 export default {
   components: { LeoLodop },
   data() { return {
@@ -52,14 +72,14 @@ export default {
       "label": "accounts",
       "name": "A4竖版",
       "bio": "自适应纸张",
-      "url": "/static/lodop/site-a4.html",
+      "url": "/leovue/static/lodop/site-a4.html",
       "engine": "dot",
       "format": "TABLE",
       "params": {
         "left": "7.5%",
         "top": "7.5%",
-        "right": "RightMargin:7.5%",
-        "bottom": "BottomMargin:7.5%"
+        "width": "RightMargin:7.5%",
+        "height": "BottomMargin:7.5%"
       },
       "default": false
     }, {
@@ -67,14 +87,14 @@ export default {
       "label": "accounts",
       "name": "POS小票",
       "bio": "80mm热敏纸",
-      "url": "/static/lodop/site-80mm.html",
+      "url": "/leovue/static/lodop/site-80mm.html",
       "engine": "dot",
       "format": "HTM",
       "params": {
         "left": "5%",
         "top": "1.0cm",
-        "right": "RightMargin:5%",
-        "bottom": "BottomMargin:1.0cm"
+        "width": "RightMargin:5%",
+        "height": "BottomMargin:1.0cm"
       },
       "default": true
     }]
@@ -82,12 +102,24 @@ export default {
   methods: {
     print() {
       this.visible = true
+    },
+    info(lodop) {
+      console.log(lodop)
     }
   }
 }
 </script>
 
+<style scoped>
+#leo-lodop {
+  margin: 5px;
+}
+</style>
 ```
+
+::: tip 打印模板
+doT.js格式打印模板
+:::
 
 ```html
 <!-- site-80mm.html (HTML with doT.js Template) -->
@@ -122,15 +154,19 @@ export default {
 
 属性
 ----
-|   名称    |                     说明                      |
-| --------- | --------------------------------------------- |
-| visible   | 可见性                                        |
-| title     | 标题                                          |
-| data      | 需要打印的数据                                |
-| templates | 打印模板列表                                  |
-| server    | 指定打印服务器，默认：`http://localhost:8000` |
+|   名称    |  类型   |      说明      |      默认值      | 必填 |
+| --------- | ------- | -------------- | ---------------- | ---- |
+| visible   | Boolean | 可见性         |                  |      |
+| title     | String  | 标题           |                  |      |
+| data      | Object  | 需要打印的数据 |                  |      |
+| templates | Array   | 打印模板列表   |                  | 是   |
+| server    | String  | 指定打印服务器 | LODOP.strHostURI |      |
 
+::: tip LODOP.strHostURI
+通常情况下，默认值是：`http://localhost:8000`
+:::
 
 方法
 ----
-无。
+|  名称  |      值      |            说明            |
+| ------ | ------------ | -------------------------- |
