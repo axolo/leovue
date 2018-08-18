@@ -5,7 +5,7 @@
         <span class="title">{{title}}</span>
         <button class="close" @click="close">X</button>
       </div>
-      <div>
+      <div class="content">
         <slot></slot>
       </div>
       <div class="footer">
@@ -72,5 +72,8 @@ export default {
   vertical-align: middle;
   color: #ffffff;
   font-size: small;
+}
+.content {
+  padding: 5px;
 }
 </style>

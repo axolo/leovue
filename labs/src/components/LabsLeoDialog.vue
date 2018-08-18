@@ -1,18 +1,30 @@
 <template>
-  <div id="leo-dialog">
-    <button @click="open">leo-dialog对话框</button>
-    <leo-dialog :visible="visible" :title="'弹窗标题'" @close="close">
-      <div class="main">弹窗内容</div>
+  <div>
+    <h4>leo-dialog</h4>
+    <p>对话框组件</p>
+    <leo-dialog :visible="visible" :title="title" @close="close">
+      <div class="main">{{content}}</div>
     </leo-dialog>
+    <div>
+      <label for="title">标题</label>
+      <input type="text" name="title" v-model="title">
+    </div>
+    <div>
+      <label for="content">内容</label>
+      <input type="text" name="content" v-model="content">
+    </div>
+    <button @click="open">开启对话框</button>
   </div>
 </template>
 
 <script>
-import { LeoDialog } from '../../../dist/leovue'
+import LeoDialog from '../../../src/components/LeoDialog'
 export default {
   components: { LeoDialog },
   data() {
     return {
+      title: 'Hello',
+      content: 'LeoVue',
       visible: false
     }
   },
@@ -28,12 +40,7 @@ export default {
 </script>
 
 <style scoped>
-  #leo-dialog {
-    margin-top: 10px;
-  }
   .main {
     padding: 20px;
-    width: 80px;
-    height: 40px;
   }
 </style>

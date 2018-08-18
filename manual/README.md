@@ -1,4 +1,4 @@
-Leo Vue
+LeoVue
 =======
 
-Leo Vue 组件库
+LeoVue 组件库

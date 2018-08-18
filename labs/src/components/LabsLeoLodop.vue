@@ -1,6 +1,24 @@
 <template>
-  <div id="leo-lodop">
-    <button @click="print">leo-lodop打印</button>
+  <div>
+    <h4>leo-lodop</h4>
+    <p>LODOP打印组件</p>
+    <table>
+      <thead>
+        <tr>
+          <th>编号</th>
+          <th>名称</th>
+          <th>网址</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="item in data" :key="item.id">
+          <td>{{item.id}}</td>
+          <td>{{item.name}}</td>
+          <td>{{item.site}}</td>
+        </tr>
+      </tbody>
+    </table>
+    <button @click="print">打印</button>
     <leo-lodop
       :visible.sync="visible"
       :title="'网站列表'"
@@ -11,7 +29,7 @@
 </template>
 
 <script>
-import { LeoLodop } from '../../../dist/leovue'
+import LeoLodop from '../../../src/components/LeoLodop'
 export default {
   components: { LeoLodop },
   data() { return {
@@ -65,7 +83,4 @@ export default {
 </script>
 
 <style scoped>
-#leo-lodop {
-  margin-top: 10px;
-}
 </style>

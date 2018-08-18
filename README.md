@@ -1,5 +1,5 @@
-Leo Vue
-=======
+LeoVue
+======
 
 A Vue.js components lib by Leo.
 

@@ -2,7 +2,7 @@ module.exports = {
   port: 4000,
   base: '/leovue/',
   dest: '../docs',
-  title: 'Leo Vue',
+  title: 'LeoVue',
   description: '一个简洁的Vue.js组件库',
   ga: 'UA-124167752-1',
   head: [
@@ -30,6 +30,8 @@ module.exports = {
         children: [
           ['/api/leo-dialog', 'leo-dialog'],
           ['/api/leo-lodop', 'leo-lodop'],
+          ['/api/leo-export', 'leo-export'],
+          ['/api/leo-import', 'leo-import']
         ]
       }
     ]

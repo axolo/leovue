@@ -32,13 +32,13 @@ window.LODOP || require('./leo-lodop/CLodopfuncs')
 export default {
   name: 'LeoLodop',
   components: { LeoDialog },
-  props: [
-    'title',            // 标题
-    'data',             // 数据
-    'templates',        // 模版集
-    'visible',          // 是否可见
-    'server'            // 指定打印服务器
-  ],
+  props: {
+    title:      { type: String, default: '打印' },                // 标题
+    data:       { },                                              // 数据
+    templates:  { type: Array, required: true },                  // 模版集
+    visible:    { type: Boolean },                                // 可见性
+    server:     { type: String, default: LODOP.strHostURI }       // 打印服务器
+  },
   data() {
     return {
       lodop: LODOP,     // 本地LODOP
@@ -46,7 +46,6 @@ export default {
     }
   },
   mounted() {
-    this.server && ( this.lodop.strHostURI = this.server)
     const defaultTemplate = _.find(this.templates, { default: true })
     defaultTemplate && (this.templateId = defaultTemplate.id)   // 默认模板
   },
@@ -114,12 +113,12 @@ button {
   font-size: x-small;
   color: #8492a6;
 }
-.tips {
-  margin: 5%;
+.label {
   font-size: small;
   color: #8492a6;
 }
-.label {
+.tips {
+  margin: 5%;
   font-size: small;
   color: #8492a6;
 }
