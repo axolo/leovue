@@ -21,9 +21,10 @@ leo-export
       :title="'工资表'"
       :sheet="'201807'"
       :type="'xls'"
-      :data="data">
-      <button>导出Excel</button>
+      :data="data"
+      :hits="hits">
     </leo-export>
+    <button @click="hits++">导出Excel</button>
     <table>
       <caption>工资表</caption>
       <thead>
@@ -62,6 +63,7 @@ export default {
   components: { LeoExport },
   data() {
     return {
+      hits: 0,
       data: [
         { name: '张三', age: 28, salary: 4500, post: '专员', dept: '行政' },
         { name: '李四', age: 30, salary: 5300, post: '设计师', dept: '设计' },
@@ -88,12 +90,18 @@ export default {
 
 属性
 ----
-| 名称  |  类型  |    说明    | 默认值 | 必填 |     |
-| ----- | ------ | ---------- | ------ | ---- | --- |
-| title | String | 标题       | exprot |      |     |
-| data  | Object | 数据       |        |      | 是  |
-| sheet | String | 工作簿名称 | Sheet1 |      |     |
-| type  | String | 文件类型   | xls    |      |     |
+| 名称  |  类型  |    说明    | 默认值 | 必填 |
+| ----- | ------ | ---------- | ------ | ---- |
+| title | String | 标题       | exprot |      |
+| data  | Object | 数据       |        | 是   |
+| sheet | String | 工作簿名称 | Sheet1 |      |
+| type  | String | 文件类型   | xls    |      |
+| hits  | Number | 导出次数   | 0      | 建议 |
+
+::: danger hits
+`leo-export`监听`hits`变化，一旦变化，则开始将数据导出成文件。
+因此若无此属性，或此属性的值不被改变，组件虽然可以正常展示，但不会实现导出。
+:::
 
 方法
 ----

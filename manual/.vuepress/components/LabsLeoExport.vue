@@ -4,9 +4,10 @@
       :title="'工资表'"
       :sheet="'201807'"
       :type="'xls'"
-      :data="data">
-      <button>导出Excel</button>
+      :data="data"
+      :hits="hits">
     </leo-export>
+    <button @click="hits++">导出Excel</button>
     <table>
       <caption>工资表</caption>
       <thead>
@@ -45,6 +46,7 @@ export default {
   components: { LeoExport },
   data() {
     return {
+      hits: 0,
       data: [
         { name: '张三', age: 28, salary: 4500, post: '专员', dept: '行政' },
         { name: '李四', age: 30, salary: 5300, post: '设计师', dept: '设计' },

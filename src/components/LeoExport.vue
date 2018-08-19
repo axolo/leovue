@@ -1,6 +1,5 @@
 <template>
-  <div class="leo-export" @click="download">
-    <slot></slot>
+  <div class="leo-export">
   </div>
 </template>
 
@@ -11,10 +10,16 @@ import moment from 'moment'
 export default {
   name: 'LeoExport',
   props: {
-    title:  { type: String, default: 'export' },
-    data:   { required: true },
-    sheet:  { type: String, default: 'Sheet1' },
-    type:   { type: String, default: 'xls' }
+    title: { type: String, default: 'export' },
+    data:  { required: true },
+    sheet: { type: String, default: 'Sheet1' },
+    type:  { type: String, default: 'xls' },
+    hits:  { type: Number, default: 0 }
+  },
+  watch: {
+    hits: function(nv, ov) {
+      this.download()
+    }
   },
   methods: {
     download() {
@@ -48,6 +53,6 @@ export default {
 
 <style scoped>
 .leo-export {
-  display: inline-block;
+  display: none;
 }
 </style>
