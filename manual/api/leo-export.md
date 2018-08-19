@@ -3,7 +3,9 @@ leo-export
 
 示例
 ----
-<labs-leo-export/>
+<ClientOnly>
+  <labs-leo-export/>
+</ClientOnly>
 
 说明
 ----

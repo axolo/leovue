@@ -3,7 +3,9 @@ leo-dialog
 
 示例
 ----
-<labs-leo-dialog/>
+<ClientOnly>
+  <labs-leo-dialog/>
+</ClientOnly>
 
 说明
 ----

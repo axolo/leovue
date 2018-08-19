@@ -3,7 +3,9 @@ leo-import
 
 示例
 ----
-<labs-leo-import/>
+<ClientOnly>
+  <labs-leo-import/>
+</ClientOnly>
 
 说明
 ----

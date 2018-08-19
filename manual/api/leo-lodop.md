@@ -3,7 +3,9 @@ leo-lodop
 
 示例
 ----
-<labs-leo-lodop/>
+<ClientOnly>
+  <labs-leo-lodop/>
+</ClientOnly>
 
 说明
 ----
