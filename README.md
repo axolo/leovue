@@ -1,20 +1,8 @@
 LeoVue
-======
+=======
 
-A Vue.js components lib by Leo.
+[LeoVue](https://axolo.github.io/leovue) is a Vue.js component library written by Leo.
 
-- [LeoVue](https://axolo.github.io/leovue)
-
-
-Files
------
-```
-|-- dist          # npm publish
-|-- docs          # docs dist (Pages Service)
-|-- manual        # docs src
-|-- labs          # labs src
-`-- src           # leovue src
-```
 
 Install
 -------
@@ -22,8 +10,32 @@ Install
 npm install @axolo/leovue --save
 ```
 
-Use
----
-```js
-import { LeoDialog, LeoUpload } from '@axolo/leovue'
+
+Import
+------
+```vue
+<template>
+  <div>
+    <leo-dialog :visible="visible" :title="title" @close="close">
+      <div class="main">{{content}}</div>
+    </leo-dialog>
+    <button @click="open">Dialog</button>
+  </div>
+</template>
+
+<script>
+import { LeoDialog } from '@axolo/leovue'
+export default {
+  components: { LeoDialog },
+  data() { return {
+    title: 'Hello',
+    content: 'LeoVue',
+    visible: false
+  }},
+  methods: {
+    open()  { this.visible = true  },
+    close() { this.visible = false }
+  }
+}
+</script>
 ```

@@ -8,8 +8,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@axolo/leovue": "^0.0.4",
-    "vue": "^2.5.17",
+    "@axolo/leovue": "^0.0.5",
     "vuepress": "^0.14.2"
   }
 }

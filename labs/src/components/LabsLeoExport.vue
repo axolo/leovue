@@ -42,7 +42,7 @@
 </template>
 
 <script>
-import LeoExport from '../../../src/components/LeoExport'
+import { LeoExport } from '../../../dist/leovue'
 export default {
   components: { LeoExport },
   data() {

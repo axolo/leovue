@@ -11,11 +11,11 @@
             <table class="leo-table">
               <tbody>
                 <tr><td class="leo-th">文件名</td><td class="leo-td">{{file.name}}</td></tr>
-                <tr><td class="leo-th">大小</td><td class="leo-td">{{file.size}} (Bytes)</td></tr>
+                <tr><td class="leo-th">文件大小</td><td class="leo-td">{{file.size}} (Bytes)</td></tr>
                 <tr><td class="leo-th">修改时间</td><td class="leo-td">{{file.lastModified}}</td></tr>
                 <tr><td class="leo-th">MIME</td><td class="leo-td">{{file.type}}</td></tr>
                 <tr><td class="leo-th">MD5</td><td class="leo-td">{{file.md5}}</td></tr>
-                <tr><td class="leo-th">有效行数</td><td class="leo-td">{{rows}}（首行不计）</td></tr>
+                <tr><td class="leo-th">有效行数</td><td class="leo-td">{{rows}}（忽略首行，剔除空行）</td></tr>
               </tbody>
             </table>
           </div>
@@ -44,7 +44,7 @@ export default {
     title: { type: String },
     visible: { type: Boolean },
     template: { type: String },
-    type: { type: Array, default: () => { return ['xls', 'csv', 'xlsx']} }
+    types: { type: Array, default: () => { return ['txt', 'csv', 'xls', 'xlsx'] }}
   },
   data() {
     return {
@@ -68,9 +68,9 @@ export default {
       this.loading = 'loading...'
       let file = e.target.files[0]
       let ext = file.name.split('.').pop()
-      if(-1 === this.type.indexOf(ext)) {
+      if(-1 === this.types.indexOf(ext)) {
         this.format = false
-        this.loading = '格式错误！仅允许以下格式：' + this.type.join(', ')
+        this.loading = '格式错误！仅允许以下格式：' + this.types.join(', ')
       } else {
         this.format = true
         browserMd5File(file, (err, md5) => {

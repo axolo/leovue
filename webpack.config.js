@@ -7,7 +7,8 @@ module.exports = {
     path: path.resolve(__dirname, './dist'),
     publicPath: '/dist/',
     filename: 'leovue.js',
-    library: 'leovue',
+    // libraryExport: "default",
+    library: 'LEOVUE',
     libraryTarget: 'umd',
     umdNamedDefine: true
   },

@@ -107,12 +107,12 @@ export default {
 
 属性
 ----
-|   名称   |  类型   |       说明       |     默认值     | 必填 |
-| -------- | ------- | ---------------- | -------------- | ---- |
-| title    | String  | 标题             |                |      |
-| visible  | Boolean | 对话框可见性     |                |      |
-| template | String  | 模板文件下载路径 |                |      |
-| type     | Array   | 允许的文件类型   | xls, csv, xlsx |      |
+|   名称   |  类型   |       说明       |       默认值        | 必填 |
+| -------- | ------- | ---------------- | ------------------- | ---- |
+| title    | String  | 标题             |                     |      |
+| visible  | Boolean | 对话框可见性     |                     |      |
+| template | String  | 模板文件下载路径 |                     |      |
+| types    | Array   | 允许的文件类型   | txt, csv, xls, xlsx |      |
 
 方法
 ----
