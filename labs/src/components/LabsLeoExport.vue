@@ -2,6 +2,7 @@
   <div>
     <h4>leo-export</h4>
     <p>数据导出组件</p>
+    <button @click="hits++">导出Excel</button>
     <table>
       <caption>工资表</caption>
       <thead>
@@ -31,7 +32,6 @@
         </tr>
       </tfoot>
     </table>
-    <button @click="hits++">导出Excel</button>
     <leo-export
       :title="'工资表'"
       :sheet="'201807'"
@@ -65,6 +65,3 @@ export default {
   }
 }
 </script>
-
-<style scoped>
-</style>

@@ -4,14 +4,16 @@
       <div class="leo-main">
         <div class="leo-file">
           <input type="file" ref="file" @change="change">
-          <span class="leo-tips"><a v-bind:href="template">模板</a></span>
+        </div>
+        <div class="leo-tips">
+          文件格式请参考<a v-bind:href="template">模板</a>，编码保持一致（一般为UTF-8）
         </div>
         <div v-if="file && format && rows">
           <div class="leo-tips">
             <table class="leo-table">
               <tbody>
                 <tr><td class="leo-th">文件名</td><td class="leo-td">{{file.name}}</td></tr>
-                <tr><td class="leo-th">文件大小</td><td class="leo-td">{{file.size}} (Bytes)</td></tr>
+                <tr><td class="leo-th">文件大小</td><td class="leo-td">{{file.size}}</td></tr>
                 <tr><td class="leo-th">修改时间</td><td class="leo-td">{{file.lastModified}}</td></tr>
                 <tr><td class="leo-th">MIME</td><td class="leo-td">{{file.type}}</td></tr>
                 <tr><td class="leo-th">MD5</td><td class="leo-td">{{file.md5}}</td></tr>
@@ -56,6 +58,11 @@ export default {
     }
   },
   methods: {
+    size(n) {
+      if(n >= 1024 && n < 1048576) return (n/1024).toFixed(2) + ' KB'
+      if(n >= 1048576) return (n/1048576).toFixed(2) + ' MB'
+      return n + ' Bytes'
+    },
     close() {
       this.$emit('update:visible', false)
     },
@@ -65,37 +72,40 @@ export default {
     },
     change(e) {
       this.rows = 0
-      this.loading = 'loading...'
+      this.loading = ''
       let file = e.target.files[0]
-      let ext = file.name.split('.').pop()
-      if(-1 === this.types.indexOf(ext)) {
-        this.format = false
-        this.loading = '格式错误！仅允许以下格式：' + this.types.join(', ')
-      } else {
-        this.format = true
-        browserMd5File(file, (err, md5) => {
-          this.file = {
-            name: file.name,
-            md5: md5,
-            size: file.size,
-            type: file.type,
-            lastModified: moment(file.lastModified).format('YYYY-MM-DD HH:mm:ss')
-          }
-        })
-        let reader = new FileReader();
-        let rABS = true
-        let that = this   // 注意作用域
-        reader.onload = function(e) {
-          let result = e.target.result;
-          if(!rABS) result = new Uint8Array(result);
-          let workbook = xlsx.read(result, {type: rABS ? 'binary' : 'array'})
-          that.data = xlsx.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]])
-          that.rows = that.data.length
-        }
-        if(rABS) {
-          reader.readAsBinaryString(file)
+      if(file) {
+        this.loading = 'loading...'
+        let ext = file.name.split('.').pop()
+        if(-1 === this.types.indexOf(ext)) {
+          this.format = false
+          this.loading = '格式错误！仅允许以下格式：' + this.types.join(', ')
         } else {
-          reader.readAsArrayBuffer(file)
+          this.format = true
+          browserMd5File(file, (err, md5) => {
+            this.file = {
+              name: file.name,
+              md5: md5,
+              size: this.size(file.size),
+              type: file.type,
+              lastModified: moment(file.lastModified).format('YYYY-MM-DD HH:mm:ss')
+            }
+          })
+          let reader = new FileReader();
+          let rABS = true
+          let that = this   // 注意作用域
+          reader.onload = function(e) {
+            let result = e.target.result;
+            if(!rABS) result = new Uint8Array(result);
+            let workbook = xlsx.read(result, {type: rABS ? 'binary' : 'array'})
+            that.data = xlsx.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]])
+            that.rows = that.data.length
+          }
+          if(rABS) {
+            reader.readAsBinaryString(file)
+          } else {
+            reader.readAsArrayBuffer(file)
+          }
         }
       }
     }

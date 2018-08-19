@@ -17,7 +17,7 @@
             <li>请根据建议选择相应的纸张，以免格式混乱。</li>
             <li>非专业人士切勿擅自修改打印模板。</li>
             <li>如有疑问请及时咨询系统管理员。</li>
-            <li>当前打印服务器：<strong>{{lodop.strHostURI}}</strong></li>
+            <li>当前打印服务器：<strong>{{server}}</strong></li>
           </ol>
         </div>
       </div>
@@ -41,7 +41,6 @@ export default {
   },
   data() {
     return {
-      lodop: LODOP,     // 本地LODOP
       templateId: ''    // 选中模版id
     }
   },
@@ -49,12 +48,17 @@ export default {
     const defaultTemplate = _.find(this.templates, { default: true })
     defaultTemplate && (this.templateId = defaultTemplate.id)   // 默认模板
   },
+  watch: {
+    server: function(nv, ov) {
+      LODOP.strHostURI = nv
+    }
+  },
   methods: {
     close() {
       this.$emit('update:visible', false)
     },
     print() {
-      const template = _.find(this.templates, {id: this.templateId})
+      const template = _.find(this.templates, { id: this.templateId })
       const axios = require('axios')
       let doc = ''
       axios.get(template.url).then(res => {
@@ -65,11 +69,11 @@ export default {
             doc = doT.template(res.data)(this.data)
             break
         }
-        this.lodop.PRINT_INIT(this.title)
+        LODOP.PRINT_INIT(this.title)
         // 多格式支持，默认为TABEL格式
         switch(template.format.toUpperCase()) {
           default:
-            this.lodop.ADD_PRINT_TABLE(
+            LODOP.ADD_PRINT_TABLE(
               template.params.top,
               template.params.left,
               template.params.width,
@@ -77,7 +81,7 @@ export default {
               doc)
             break
           case 'HTM':
-            this.lodop.ADD_PRINT_HTM(
+            LODOP.ADD_PRINT_HTM(
               template.params.top,
               template.params.left,
               template.params.width,
@@ -85,7 +89,7 @@ export default {
               doc)
             break
         }
-        this.lodop.PREVIEW()
+        LODOP.PREVIEW()
       }).catch(err => {
         console.log(err)
       })

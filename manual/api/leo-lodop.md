@@ -48,12 +48,14 @@ leo-lodop
         </tr>
       </tbody>
     </table>
+    <small>打印服务器：</small><input type="text" v-model="server">
     <button @click="print">打印</button>
     <leo-lodop
       :visible.sync="visible"
       :title="'网站列表'"
       :data="data"
-      :templates="templates">
+      :templates="templates"
+      :server="server">
     </leo-lodop>
   </div>
 </template>
@@ -63,6 +65,7 @@ import { LeoLodop } from '@axolo/leovue'
 export default {
   components: { LeoLodop },
   data() { return {
+    server: 'http://localhost:8000',
     visible: false,
     data: [
       { id: 1, name: '西阁码农', site: 'www.woodso.com' },
@@ -104,9 +107,6 @@ export default {
   methods: {
     print() {
       this.visible = true
-    },
-    info(lodop) {
-      console.log(lodop)
     }
   }
 }
@@ -151,7 +151,6 @@ doT.js格式打印模板
   <hr>{{~}}
 </div>
 <div>制表：</div>
-
 ```
 
 属性

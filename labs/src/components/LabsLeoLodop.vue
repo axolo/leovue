@@ -18,12 +18,14 @@
         </tr>
       </tbody>
     </table>
+    打印服务器：<input type="text" v-model="server">
     <button @click="print">打印</button>
     <leo-lodop
       :visible.sync="visible"
       :title="'网站列表'"
       :data="data"
-      :templates="templates">
+      :templates="templates"
+      :server="server">
     </leo-lodop>
   </div>
 </template>
@@ -34,6 +36,7 @@ export default {
   components: { LeoLodop },
   data() { return {
     visible: false,
+    server: 'http://localhost:8000',
     data: [
       { id: 1, name: '西阁码农', site: 'www.woodso.com' },
       { id: 2, name: 'Vue.js',   site: 'cn.vuejs.org'   },
