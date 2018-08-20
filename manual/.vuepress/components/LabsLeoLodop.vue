@@ -16,14 +16,16 @@
         </tr>
       </tbody>
     </table>
-    <small>打印服务器：</small><input type="text" v-model="server">
-    <button @click="print">打印</button>
+    <div>
+      <small>LODOP：</small><input class="new-lodop" type="text"v-model="newLodop">
+      <button @click="print">打印</button>
+    </div>
     <leo-lodop
       :visible.sync="visible"
       :title="'网站列表'"
       :data="data"
       :templates="templates"
-      :server="server">
+      :lodop="lodop">
     </leo-lodop>
   </div>
 </template>
@@ -33,8 +35,9 @@ import { LeoLodop } from '@axolo/leovue'
 export default {
   components: { LeoLodop },
   data() { return {
-    server: 'http://localhost:8000',
     visible: false,
+    lodop: 'http://localhost:8000/CLodopfuncs.js',
+    newLodop: '',
     data: [
       { id: 1, name: '西阁码农', site: 'www.woodso.com' },
       { id: 2, name: 'Vue.js',   site: 'cn.vuejs.org'   },
@@ -72,8 +75,12 @@ export default {
       "default": true
     }]
   }},
+  mounted() {
+    this.newLodop = this.lodop
+  },
   methods: {
     print() {
+      this.lodop = this.newLodop
       this.visible = true
     }
   }
@@ -83,5 +90,8 @@ export default {
 <style scoped>
 #leo-lodop {
   margin: 5px;
+}
+.new-lodop {
+  width: 300px;
 }
 </style>

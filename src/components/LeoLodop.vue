@@ -17,7 +17,7 @@
             <li>请根据建议选择相应的纸张，以免格式混乱。</li>
             <li>非专业人士切勿擅自修改打印模板。</li>
             <li>如有疑问请及时咨询系统管理员。</li>
-            <li>当前打印服务器：<strong>{{server}}</strong></li>
+            <li>当前LODOP（出错则使用最近正确配置）：<br><strong>{{lodop}}</strong></li>
           </ol>
         </div>
       </div>
@@ -28,29 +28,36 @@
 <script>
 import _ from 'lodash'
 import LeoDialog from './LeoDialog'
-window.LODOP || require('./leo-lodop/CLodopfuncs')
 export default {
   name: 'LeoLodop',
   components: { LeoDialog },
   props: {
-    title:      { type: String, default: '打印' },                // 标题
-    data:       { },                                              // 数据
-    templates:  { type: Array, required: true },                  // 模版集
-    visible:    { type: Boolean },                                // 可见性
-    server:     { type: String, default: LODOP.strHostURI }       // 打印服务器
+    title:      { type: String, default: '打印' },    // 标题
+    data:       { },                                  // 数据
+    templates:  { type: Array, required: true },      // 模版集
+    visible:    { type: Boolean },                    // 可见性
+    lodop:      { type: String, default: 'http://localhost:8000/CLodopfuncs.js' }   // LODOP
   },
-  data() {
-    return {
-      templateId: ''    // 选中模版id
-    }
-  },
+  data() { return {
+    templateId: ''    // 选中模版id
+  }},
   mounted() {
     const defaultTemplate = _.find(this.templates, { default: true })
+    const loadScript = require('load-script')
     defaultTemplate && (this.templateId = defaultTemplate.id)   // 默认模板
+    window.LODOP || loadScript(
+      this.lodop,
+      { attrs: { ref: 'LeoLodop' } },
+      (err, script) => { err && console.log(err)
+    })
   },
   watch: {
-    server: function(nv, ov) {
-      LODOP.strHostURI = nv
+    lodop: function(nv, ov) {
+      // TODO: remove this.$refs.LeoLodop
+      // TODO: if lodop uri is illegal, keep last LODOP
+      // LODOP = undefined
+      const loadScript = require('load-script')
+      loadScript(nv, { attrs: { ref: 'LeoLodop' } }, (err, script) => { err && console.log(err) })
     }
   },
   methods: {
