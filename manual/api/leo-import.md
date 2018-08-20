@@ -116,7 +116,7 @@ export default {
 | template | String  | 模板文件下载路径 |                     |      |
 | types    | Array   | 允许的文件类型   | txt, csv, xls, xlsx |      |
 
-方法
+事件
 ----
 |  名称  |      值      |            说明            |
 | ------ | ------------ | -------------------------- |

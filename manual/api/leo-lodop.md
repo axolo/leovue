@@ -9,15 +9,11 @@ leo-lodop
 
 说明
 ----
-调用LODOP打印。[LODOP演示及文档](http://www.lodop.net/LodopDemo.html)细节不够完美，需要自行测试。如：
+调用LODOP打印，本组件依赖于[LODOP](http://www.lodop.net)，请自行下载安装配置。
+[LODOP演示及文档](http://www.lodop.net/LodopDemo.html)细节不够完美，需要自行测试。
+如：
 - HTM格式：矢量打印，文字非常清晰
 - HTML格式：整个文档转换为低画质图片后打印 :(
-
-#### 前提条件
-- [LODOP](http://www.lodop.net/)
-- [Lodash](https://www.lodashjs.com/)
-- [doT.js](https://github.com/defunkt/dotjs)
-- [axios](https://github.com/axios/axios)
 
 #### 模板选择对话框
 ![模板选择对话框](./assets/leo-lodop-dialog.png)
@@ -48,14 +44,16 @@ leo-lodop
         </tr>
       </tbody>
     </table>
-    <small>打印服务器：</small><input type="text" v-model="server">
-    <button @click="print">打印</button>
+    <div>
+      <small>LODOP：</small><input class="new-lodop" type="text"v-model="newLodop">
+      <button @click="print">打印</button>
+    </div>
     <leo-lodop
       :visible.sync="visible"
       :title="'网站列表'"
       :data="data"
       :templates="templates"
-      :server="server">
+      :lodop="lodop">
     </leo-lodop>
   </div>
 </template>
@@ -65,8 +63,9 @@ import { LeoLodop } from '@axolo/leovue'
 export default {
   components: { LeoLodop },
   data() { return {
-    server: 'http://localhost:8000',
     visible: false,
+    lodop: 'http://localhost:8000/CLodopfuncs.js',
+    newLodop: '',
     data: [
       { id: 1, name: '西阁码农', site: 'www.woodso.com' },
       { id: 2, name: 'Vue.js',   site: 'cn.vuejs.org'   },
@@ -104,8 +103,12 @@ export default {
       "default": true
     }]
   }},
+  mounted() {
+    this.newLodop = this.lodop
+  },
   methods: {
     print() {
+      this.lodop = this.newLodop
       this.visible = true
     }
   }
@@ -115,6 +118,9 @@ export default {
 <style scoped>
 #leo-lodop {
   margin: 5px;
+}
+.new-lodop {
+  width: 300px;
 }
 </style>
 ```
@@ -155,19 +161,14 @@ doT.js格式打印模板
 
 属性
 ----
-|   名称    |  类型   |      说明      |      默认值      | 必填 |
-| --------- | ------- | -------------- | ---------------- | ---- |
-| visible   | Boolean | 可见性         |                  |      |
-| title     | String  | 标题           |                  |      |
-| data      | Object  | 需要打印的数据 |                  |      |
-| templates | Array   | 打印模板列表   |                  | 是   |
-| server    | String  | 指定打印服务器 | LODOP.strHostURI |      |
+|   名称    |  类型   |      说明      |                 默认值                 | 必填 |
+| --------- | ------- | -------------- | -------------------------------------- | ---- |
+| visible   | Boolean | 可见性         |                                        |      |
+| title     | String  | 标题           |                                        |      |
+| data      | Object  | 需要打印的数据 |                                        |      |
+| templates | Array   | 打印模板列表   |                                        | 是   |
+| server    | String  | 指定打印服务器 | `http://localhost:8000/CLodopfuncs.js` |      |
 
-::: tip LODOP.strHostURI
-通常情况下，默认值是：`http://localhost:8000`
-:::
-
-方法
+事件
 ----
-|  名称  |      值      |            说明            |
-| ------ | ------------ | -------------------------- |
+无

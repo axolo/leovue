@@ -7,6 +7,7 @@
       <li><router-link to="/leo-lodop">leo-lodop</router-link></li>
       <li><router-link to="/leo-export">leo-export</router-link></li>
       <li><router-link to="/leo-import">leo-import</router-link></li>
+      <li><router-link to="/leo-upload">leo-upload</router-link></li>
     </ul>
   </div>
 </template>

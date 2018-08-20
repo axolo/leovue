@@ -2,12 +2,14 @@ import LeoDialog from './components/LeoDialog'
 import LeoLodop from './components/LeoLodop'
 import LeoExport from './components/LeoExport'
 import LeoImport from './components/LeoImport'
+import LeoUpload from './components/LeoUpload'
 
 const components = [
   LeoDialog,
   LeoLodop,
   LeoExport,
-  LeoImport
+  LeoImport,
+  LeoUpload
 ]
 
 const install = function (Vue, opts = {}) {
@@ -26,5 +28,6 @@ export {
   LeoDialog,
   LeoLodop,
   LeoExport,
-  LeoImport
+  LeoImport,
+  LeoUpload
 }

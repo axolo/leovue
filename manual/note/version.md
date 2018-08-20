@@ -1,36 +1,40 @@
 版本
 ====
 
+Bugs
+----
+- `iOS`系统下`leo-export`输出不能按规定文件名、格式和编码下载，体现为`Blob`的`Unknow`文件
+
 0.0.8
 -----
-- fixed: 将`LODOP`从leo-lodop剥离并可以指定LODOP服务器
+- 从`leo-lodop`剥离了`LODOP`，实现动态加载，并可以自定义`LODOP`服务器
 
 0.0.7
 -----
-- fixed: 指定`leo-export`输出格式
-- bug: `leo-export`输出在`iOS`系统依然体现为`Blob`的`unknow`文件
+- 指定`leo-export`输出的编码格式
 
 0.0.6
 -----
-- add: `docs`，LeoVue文档上线，并解决编译错误导致的404问题
+- `docs`，LeoVue文档上线，并解决编译错误导致的404问题
 
 0.0.5
 -----
-- add: `labs`，LeoVue实验室上线，集中解决调试中的问题，调试无误后编入文档
+- `leo-import`上线，数据导出Excel文件
 
 0.0.4
 -----
-- add: `leo-import`，导出Excel
-
+- `leo-export`上线，从Excel文件导入数据
 
 0.0.3
 -----
-- add: `leo-export`，从Excel导入
+- `leo-lodop`上线，实现`LODOP`打印
 
 0.0.2
 -----
-- add: `leo-lodop`，`LODOP`打印
+- `labs`——LeoVue实验室上线，集中解决调试中的问题，调试无误后编入文档
+- `LeoVue`命名为`@axolo/leovue`，实现组件库打包，并发布到`npmjs.com`
 
 0.0.1
 -----
-- add: `leo-dialog`，对话框，这个是很多组件的基础
+- `leo-dialog`对话框上线，多个组件依赖于对话框组件
+- 开发企业定制系统过程，尝试`ElementUI`、`VUX`、`MpVue`等多个库，发现需要自行打包企业应用必备组件，萌生开发自有组件库想法。
