@@ -1,12 +1,12 @@
 <template>
   <div>
-  <h4>leo-import</h4>
-    <p>数据导入组件</p>
+  <h4>leo-upload</h4>
+    <p>文件上传组件</p>
     <leo-upload
       :title="title"
       :visible.sync="visible"
       :types="types"
-      :size="5000000"
+      :size="50000000"
       :count="5"
       :multiple="true">
     </leo-upload>
@@ -20,9 +20,9 @@ export default {
   components: { LeoUpload },
   data() {
     return {
-      title: '实验室上传',
+      title: '多文件异步上传',
       visible: false,
-      types: ['zip', 'txt', 'jpg', 'png']
+      types: ['zip', 'txt', 'jpg', 'png', 'pdf', 'exe']
     }
   },
   methods: {

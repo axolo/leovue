@@ -1,16 +1,17 @@
 <template>
   <div>
     <leo-dialog :title="title" :visible="visible" @close="close">
-      <div class="leo-tips leo-message">{{status}}</div>
+      <div class="leo-tips leo-message">{{step}}</div>
       <input class="leo-input-file" type="file" @change="change" :multiple="multiple" v-if="choose">
       <div class="leo-tips" v-else>
-        <table class="leo-table">
+        <table class="leo-table" v-if="files">
+          <caption class="leo-caption">Picks: {{files.length}}</caption>
           <thead>
               <tr>
                 <th class="leo-th">#</th>
                 <th class="leo-th">Name</th>
                 <th class="leo-th">Size</th>
-                <th class="leo-th">MD5</th>
+                <th class="leo-th">Hash(MD5)</th>
                 <th class="leo-th">Status</th>
                 <th class="leo-th">
                   <button class="leo-button-circle" @click="cancel" title="Remove all">x</button>
@@ -21,8 +22,8 @@
             <tr v-for="(file, index) in files" :key="file.id">
               <td>{{++index}}</td>
               <td class="leo-td"><span class="leo-over" :title="file.name">{{file.name}}</span></td>
-              <td class="leo-td leo-right">{{file.size | byte}}</td>
-              <td class="leo-td leo-code">{{file.md5}}</td>
+              <td class="leo-td leo-right">{{file.size | bytes}}</td>
+              <td class="leo-td leo-code">{{file.hash}}</td>
               <td class="leo-td leo-center">{{file.status}}</td>
               <td class="leo-td leo-center">
                 <button class="leo-button-circle" @click="remove(index-1)" :title="'Remove '+index">x</button>
@@ -31,7 +32,33 @@
           </tbody>
         </table>
         <button class="leo-button" @click="upload" v-if="completed">Upload</button>
+        <table class="leo-table" v-if="bans">
+          <caption class="leo-caption">
+            Bans: {{bans.length}}
+            [<span class="show-bans" v-if="showBans" @click="showBans=false">hide</span>
+            <span class="show-bans" v-else @click="showBans=true">show</span>]
+          </caption>
+          <thead v-if="showBans">
+              <tr>
+                <th class="leo-th">#</th>
+                <th class="leo-th">Name</th>
+                <th class="leo-th">Size</th>
+                <th class="leo-th">Ext</th>
+                <th class="leo-th">By</th>
+            </tr>
+          </thead>
+          <tbody v-if="showBans">
+            <tr v-for="(file, index) in bans" :key="file.id">
+              <td>{{++index}}</td>
+              <td class="leo-td"><span class="leo-over" :title="file.name">{{file.name}}</span></td>
+              <td class="leo-td leo-right">{{file.size | bytes}}</td>
+              <td class="leo-td leo-left">{{file.ext}}</td>
+              <td class="leo-td leo-center">{{file.ban.join(', ')}}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
+      <div class="leo-tips leo-message" v-if="filter">{{filter}}</div>
     </leo-dialog>
   </div>
 </template>
@@ -40,6 +67,8 @@
 import _ from 'lodash'
 import browserMd5File from 'browser-md5-file'
 import axios from 'axios'
+import moment from 'moment'
+import bytes from 'bytes'
 import LeoDialog from './LeoDialog'
 export default {
   name: 'LeoUpload',
@@ -56,27 +85,37 @@ export default {
   },
   data() {
     return {
-      status: '',             // 状态提示信息
-      step: {},               // 步骤
+      step: '',               // 状态提示信息
+      filter: [],             // 筛选器
       choose: true,           // 文件选择器可见
       completed: false,       // 加载完成（前端）
       files: [],              // 文件列表（中选）
-      lose: [],               // 文件列表（落选）
+      bans: [],               // 文件列表（落选）
       target: '',             // File对象（原始）
+      showBans: false,        // 查看落选
+      steps: {
+        step1: 'Step 1: Choose',
+        step2: 'Step 2: Ban / Pick',
+        step3: 'Step 3: Hash',
+        step4: 'Step 4: Upload',
+        step5: 'Step 5: Response'
+      }
     }
   },
   mounted() {
-    this.step.s1 = 'Step 1: Choose File'
-    this.size && (this.step.s1 += ', size<=' + this.size)
-    this.count && (this.step.s1 += ', qty<=' + this.count)
-    this.types.length && (this.step.s1 += ', type: ' + this.types.join(', '))
-    this.status = this.step.s1
+    let filter = []
+    this.size && filter.push('size<=' + bytes(this.size))
+    this.count && filter.push('qty<=' + this.count)
+    this.types.length && filter.push('type: ' + this.types.join(', '))
+    this.step = this.steps.step1
+    filter.length && (this.filter = 'Filter: ' + filter.join(', '))
   },
   filters: {
-    byte: function(n) {
-      if(n >= 1024 && n < 1048576) return (n/1024).toFixed(2) + ' KB'
-      if(n >= 1048576) return (n/1048576).toFixed(2) + ' MB'
-      return n + ' Bytes'
+    bytes: function(n) {
+      return bytes(n, {fixedDecimals: true, unitSeparator: ' '})
+    },
+    moment: function(s, f) {
+      return moment(s).format(f)
     }
   },
   methods: {
@@ -90,20 +129,23 @@ export default {
     },
     cancel() {
       this.files = []
+      this.bans = []
       this.choose = true
       this.completed = false
-      this.status = this.step.s1
+      this.status = filter
     },
     remove(i) {
       this.files[i].ban.push('remove')    // 落选原因
-      this.lose.push(this.files[i])       // 进入落选
+      this.bans.push(this.files[i])       // 进入落选
       this.files.splice(i, 1)             // 退出中选
+      console.log(this.files)
+      console.log(this.bans)
     },
     change(e) {
       /**
        * 多文件异步可筛选支持急速上传的上传组件
        * =======================================
-       * STEP 1: 筛选
+       * 一、筛选
        * 1. 赋值
        *    监听文件框变化，保存target，赋值给files（注意ID对应）
        * 2. 过滤
@@ -111,45 +153,63 @@ export default {
        *    2). 大小：分析文件大小，超过的剔除。（ban: true）
        * 3. 超载
        *    统计经过各道筛选后剩余的数量，若仍超过允许数量，提示并要求重新选择。
-       * STEP 2: 计算
+       * 二、计算
        * 1. 计算哈希、格式化大小、计算状态，展现经过筛选的文件列表
        * 2. 用户可对展现的文件类别动态操作（ban: 'remove'）
-       * STEP 3: 上传
+       * 三、上传
        * 1. 若定义了急速上传，验证存在，则标记（status: 'rapid'）
        * 2. 异步上传筛选后经用户操作且未被标记可急速上传的文件（status: 'processor'）
        * 3. 上传成功，返回服务端hash（status: 'success'）
        * 4. 跟客户端hash对比一致（ban: 'hash'）
        * 5. 上传失败，允许重试上传，并更新状态（status: 'failed'）
-       * STEP 4: 返回
-       * 6. TODO: HASH不一致的是否删除？
-       * 7. 通过事件传递上传结果给父组件
+       * 四、返回
+       * 1. TODO: HASH不一致的是否删除？
+       * 2. 通过事件传递上传结果给父组件
        */
+      // 一、筛选
+      this.step = this.steps.step2
       this.choose = false
-      // STEP 1.1
       this.target = e.target.files
       let n = e.target.files.length
       for(let i=0; i<n; i++) {
-        this.files.push({
+        let file = {
           id: i,
           name: this.target[i].name,
-          size: this.target[i].size,
-          type: this.target[i].type,
           ext: this.target[i].name.split('.').pop().toLowerCase(),
-          md5: '',
+          size: this.target[i].size,
+          lastModified: this.target[i].lastModified,
+          hash: '',
           ban: [],
-          status: '',
-          lastModified: this.target[i].lastModified
-        })
+          status: ''
+        }
+        // 1. 文件类型错误
+        if(this.types.length && -1 === this.types.indexOf(file.ext)) {
+          file.ban.push('type')
+          this.bans.push(file)
+          continue
+        }
+        // 2. 文件大小超出
+        if(this.size && this.size < file.size) {
+          file.ban.push('size')
+          this.bans.push(file)
+          continue
+        }
+        // 3. 正常情况
+        this.files.push(file)
       }
-      console.log(this.files)
-      // Step 1.2
-    },
-        //     let file = e.target.files[i]
-        // Object.assign(file, { ban: [] })
-        // let ext = file.name.split('.').pop()
-        // this.types.length && -1 === this.types.indexOf(ext) && this.file.ban.push('type')
-        // this.file.size > this.size  && this.file.ban.push('type')
 
+      // 二、计算
+      let m = this.files.length
+      let j = 0
+      this.files.forEach((file) => {
+        browserMd5File(this.target[file.id], (err, md5) => {
+          j++
+          this.step = this.steps.step3 + ' ' + j + '/' + m
+          this.files[file.id].hash = md5
+          console.log(err)
+        })
+      })
+    },
     // change(e) {
     //   this.choose = false
     //   this.target = e.target.files
@@ -217,6 +277,11 @@ export default {
   border-collapse: collapse;
   text-align: left;
 }
+.leo-caption {
+  font-size: small;
+  text-align: left;
+  width: 200px;
+}
 .leo-td {
   border: 1px solid darkgray;
   padding: 2px 5px;
@@ -239,5 +304,10 @@ export default {
   white-space:nowrap;
   overflow:hidden;
   display:block;
+}
+.show-bans {
+  cursor: pointer;
+  text-decoration-line: underline;
+  color: #43B17B;
 }
 </style>

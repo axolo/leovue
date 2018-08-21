@@ -6,14 +6,14 @@
           <input type="file" ref="file" @change="change">
         </div>
         <div class="leo-tips">
-          文件格式请参考<a v-bind:href="template">模板</a>，编码保持一致（一般为UTF-8）
+          文件格式请参考 <a class="leo-a" v-bind:href="template">模板</a> ，编码保持一致（一般为UTF-8）
         </div>
         <div v-if="file && format && rows">
           <div class="leo-tips">
             <table class="leo-table">
               <tbody>
                 <tr><td class="leo-th">文件名</td><td class="leo-td">{{file.name}}</td></tr>
-                <tr><td class="leo-th">文件大小</td><td class="leo-td">{{file.size | byte}}</td></tr>
+                <tr><td class="leo-th">文件大小</td><td class="leo-td">{{file.size | bytes}}</td></tr>
                 <tr><td class="leo-th">修改时间</td><td class="leo-td">{{file.lastModified | moment('YYYY-MM-DD HH:mm:ss')}}</td></tr>
                 <tr><td class="leo-th">MIME</td><td class="leo-td">{{file.type}}</td></tr>
                 <tr><td class="leo-th">MD5</td><td class="leo-td">{{file.md5}}</td></tr>
@@ -38,6 +38,7 @@
 import xlsx from 'xlsx'
 import browserMd5File from 'browser-md5-file'
 import moment from 'moment'
+import bytes from 'bytes'
 import LeoDialog from './LeoDialog'
 export default {
   name: 'LeoImport',
@@ -58,10 +59,8 @@ export default {
     }
   },
   filters: {
-    byte: function(n) {
-      if(n >= 1024 && n < 1048576) return (n/1024).toFixed(2) + ' KB'
-      if(n >= 1048576) return (n/1048576).toFixed(2) + ' MB'
-      return n + ' Bytes'
+    bytes: function(n) {
+      return bytes(n, {fixedDecimals: true, unitSeparator: ' '})
     },
     moment: function(s, f) {
       return moment(s).format(f)
@@ -155,5 +154,8 @@ export default {
   padding: 2px 5px;
   text-align: center;
   font-weight: bold;
+}
+.leo-a {
+  color: #43B17B;
 }
 </style>
