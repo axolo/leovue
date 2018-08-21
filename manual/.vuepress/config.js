@@ -32,8 +32,8 @@ module.exports = {
           ['/api/leo-import', 'leo-import']
         ]
       },
-      [ '/note/version', '版本' ],
-      [ '/note/postscript', '后记' ]
+      [ '/version', '版本' ],
+      [ '/postscript', '后记' ]
     ]
   }
 }

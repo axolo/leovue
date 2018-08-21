@@ -4,7 +4,11 @@
     <p>数据导入组件</p>
     <leo-upload
       :title="title"
-      :visible.sync="visible">
+      :visible.sync="visible"
+      :types="types"
+      :size="5000000"
+      :count="5"
+      :multiple="true">
     </leo-upload>
     <button @click="open">上传</button>
   </div>
@@ -18,6 +22,7 @@ export default {
     return {
       title: '实验室上传',
       visible: false,
+      types: ['zip', 'txt', 'jpg', 'png']
     }
   },
   methods: {

@@ -5,6 +5,11 @@ Bugs
 ----
 - `iOS`系统下`leo-export`输出不能按规定文件名、格式和编码下载，体现为`Blob`的`Unknow`文件
 
+0.0.9
+-----
+- `leo-upload`出生
+- `leo-import`开始使用[过滤器](https://cn.vuejs.org/v2/guide/filters.html)
+
 0.0.8
 -----
 - 从`leo-lodop`剥离了`LODOP`，实现动态加载，并可以自定义`LODOP`服务器

@@ -13,8 +13,8 @@
             <table class="leo-table">
               <tbody>
                 <tr><td class="leo-th">文件名</td><td class="leo-td">{{file.name}}</td></tr>
-                <tr><td class="leo-th">文件大小</td><td class="leo-td">{{file.size}}</td></tr>
-                <tr><td class="leo-th">修改时间</td><td class="leo-td">{{file.lastModified}}</td></tr>
+                <tr><td class="leo-th">文件大小</td><td class="leo-td">{{file.size | byte}}</td></tr>
+                <tr><td class="leo-th">修改时间</td><td class="leo-td">{{file.lastModified | moment('YYYY-MM-DD HH:mm:ss')}}</td></tr>
                 <tr><td class="leo-th">MIME</td><td class="leo-td">{{file.type}}</td></tr>
                 <tr><td class="leo-th">MD5</td><td class="leo-td">{{file.md5}}</td></tr>
                 <tr><td class="leo-th">有效行数</td><td class="leo-td">{{rows}}（忽略首行，剔除空行）</td></tr>
@@ -57,12 +57,17 @@ export default {
       format: false
     }
   },
-  methods: {
-    size(n) {
+  filters: {
+    byte: function(n) {
       if(n >= 1024 && n < 1048576) return (n/1024).toFixed(2) + ' KB'
       if(n >= 1048576) return (n/1048576).toFixed(2) + ' MB'
       return n + ' Bytes'
     },
+    moment: function(s, f) {
+      return moment(s).format(f)
+    }
+  },
+  methods: {
     close() {
       this.$emit('update:visible', false)
     },
@@ -86,9 +91,9 @@ export default {
             this.file = {
               name: file.name,
               md5: md5,
-              size: this.size(file.size),
+              size: file.size,
               type: file.type,
-              lastModified: moment(file.lastModified).format('YYYY-MM-DD HH:mm:ss')
+              lastModified: file.lastModified
             }
           })
           let reader = new FileReader();

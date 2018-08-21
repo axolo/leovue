@@ -3,7 +3,7 @@
     <div class="leo-dialog">
       <div class="leo-header">
         <span class="leo-title">{{title}}</span>
-        <button class="leo-close" @click="close">X</button>
+        <button class="leo-close" @click="close" title="Close Dialog">X</button>
       </div>
       <div class="leo-content">
         <slot></slot>
@@ -63,6 +63,7 @@ export default {
 }
 .leo-close {
   border-radius: 25%;
+  cursor: pointer;
   float: right;
   margin: 5px;
 }
