@@ -1,8 +1,36 @@
+<!-- /**
+  * 多文件异步可筛选支持急速上传的上传组件
+  * =======================================
+  * 一、筛选
+  * --------
+  * 1. 赋值
+  *    监听文件框变化，保存target，赋值给files（注意ID对应）
+  * 2. 过滤
+  *    1). 类型：分析文件类型，允许的保留，其余的剔除。其结果转下一道筛选（ban: true）
+  *    2). 大小：分析文件大小，超过的剔除。（ban: true）
+  * 3. 超载
+  *    统计经过各道筛选后剩余的数量，若仍超过允许数量，提示并要求重新选择。
+  * 二、计算
+  * --------
+  * 1. 计算哈希、格式化大小、计算状态，展现经过筛选的文件列表
+  * 2. 用户可对展现的文件类别动态操作（ban: 'remove'）
+  * 三、上传
+  * --------
+  * 1. 若定义了急速上传，验证存在，则标记（status: 'rapid'）
+  * 2. 异步上传筛选后经用户操作且未被标记可急速上传的文件（status: 'processor'）
+  * 3. 上传成功，返回服务端hash（status: 'success'）
+  * 4. 跟客户端hash对比一致（ban: 'hash'）
+  * 5. 上传失败，允许重试上传，并更新状态（status: 'failed'）
+  * 四、返回
+  * --------
+  * 1. TODO: 客户端计算的HASH与服务端不一致的是否删除？
+  * 2. 通过事件传递上传结果给父组件
+*/ -->
 <template>
   <div>
     <leo-dialog :title="title" :visible="visible" @close="close">
       <div class="leo-tips leo-message">
-        <span v-if="warning">{{warning}} <button class="leo-button" @click="cancel">retry</button></span>
+        <span v-if="warning">{{warning}} [<a class="leo-span-a" @click="cancel">Reselect</a>]</span>
         <span v-else>{{step}}</span>
         <button class="leo-button leo-upload" @click="upload" v-if="completed">Upload</button>
       </div>
@@ -38,8 +66,8 @@
         <table class="leo-table" v-if="bans.length">
           <caption class="leo-caption">
             Bans: {{bans.length}}
-            [<span class="show-bans" v-if="showBans" @click="showBans=false">hide</span>
-            <span class="show-bans" v-else @click="showBans=true">show</span>]
+            [<span class="leo-span-a" v-if="showBans" @click="showBans=false">hide</span>
+            <span class="leo-span-a" v-else @click="showBans=true">show</span>]
           </caption>
           <thead v-if="showBans">
               <tr>
@@ -81,14 +109,14 @@ export default {
   name: 'LeoUpload',
   components: { LeoDialog },
   props: {
-    title: { type: String },                     // 对话框标题
-    visible: { type: Boolean },                  // 对话框可见性
-    types: { type: Array, default: () => [] },   // 文件格式
-    size: { type: Number, default: 0 },          // 最大文件大小
-    max: { type: Number, default: 0 },         // 最多文件数量
-    multiple: { type: Boolean, default: true },  // 多文件上传
-    rapid: { type: String, default: '' },        // 急速上传（验证MD5地址）
-    action: { type: String, default: '' }        // 上传地址
+    title: { type: String },                      // 对话框标题
+    visible: { type: Boolean },                   // 对话框可见性
+    types: { type: Array, default: () => [] },    // 文件格式
+    size: { type: Number, default: 0 },           // 最大文件大小
+    max: { type: Number, default: 0 },            // 最多文件数量
+    multiple: { type: Boolean, default: true },   // 多文件上传
+    rapid: { type: Object },                      // 急速上传（验证MD5地址）
+    action: { type: Object }                      // 上传地址
   },
   data() {
     return {
@@ -134,8 +162,27 @@ export default {
       this.$emit('update:visible', false)
     },
     upload() {
-      this.files.forEach((file) => {
-        console.log(this.target[file.id])
+      // TODO: 急速上传
+      this.files.forEach((file, i) => {
+          let data = new FormData()
+          data.append('file', this.target[file.id])
+          let config = { onUploadProgress: progressEvent => {
+            let complete = (progressEvent.loaded / progressEvent.total * 100 | 0) + '%'
+            this.$set(this.files, i, {
+              status: Math.random(),
+              id: this.files[i].id,
+              name: this.files[i].name,
+              hash: this.files[i].hash,
+              size: this.files[i].size,
+              ext: this.files[i].ext,
+              ban: this.files[i].ban,
+              lastModified: this.files[i].lastModified
+            })
+          }}
+          Object.assign(this.action, { data: data })
+          axios(this.action, config).then(res => {
+            console.log(res)
+          })
       })
     },
     cancel() {
@@ -148,32 +195,10 @@ export default {
       this.files[i].ban.push('remove')    // 落选原因
       this.bans.push(this.files[i])       // 进入落选
       this.files.splice(i, 1)             // 退出中选
+      console.log(this.target)
+      // this.target.splice(i, 1)             // 退出中选
     },
     change(e) {
-      /**
-       * 多文件异步可筛选支持急速上传的上传组件
-       * =======================================
-       * 一、筛选
-       * 1. 赋值
-       *    监听文件框变化，保存target，赋值给files（注意ID对应）
-       * 2. 过滤
-       *    1). 类型：分析文件类型，允许的保留，其余的剔除。其结果转下一道筛选（ban: true）
-       *    2). 大小：分析文件大小，超过的剔除。（ban: true）
-       * 3. 超载
-       *    统计经过各道筛选后剩余的数量，若仍超过允许数量，提示并要求重新选择。
-       * 二、计算
-       * 1. 计算哈希、格式化大小、计算状态，展现经过筛选的文件列表
-       * 2. 用户可对展现的文件类别动态操作（ban: 'remove'）
-       * 三、上传
-       * 1. 若定义了急速上传，验证存在，则标记（status: 'rapid'）
-       * 2. 异步上传筛选后经用户操作且未被标记可急速上传的文件（status: 'processor'）
-       * 3. 上传成功，返回服务端hash（status: 'success'）
-       * 4. 跟客户端hash对比一致（ban: 'hash'）
-       * 5. 上传失败，允许重试上传，并更新状态（status: 'failed'）
-       * 四、返回
-       * 1. TODO: HASH不一致的是否删除？
-       * 2. 通过事件传递上传结果给父组件
-       */
       // 一、筛选
       this.choose = false
       this.files = []
@@ -203,11 +228,11 @@ export default {
         }
         // 3. 正常情况
         this.files.push(file)
-
       }
 
       // 4. 数量判断
       let pick = this.files.length
+      !pick && (this.warning = 'Not enough files.')
       if(this.max < pick) {
         this.files = []
         this.bans = []
@@ -307,7 +332,7 @@ export default {
   overflow:hidden;
   display:block;
 }
-.show-bans {
+.leo-span-a {
   cursor: pointer;
   text-decoration-line: underline;
   color: #43B17B;
