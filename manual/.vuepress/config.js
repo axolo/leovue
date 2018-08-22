@@ -29,7 +29,8 @@ module.exports = {
           ['/api/leo-dialog', 'leo-dialog'],
           ['/api/leo-lodop', 'leo-lodop'],
           ['/api/leo-export', 'leo-export'],
-          ['/api/leo-import', 'leo-import']
+          ['/api/leo-import', 'leo-import'],
+          ['/api/leo-upload', 'leo-upload']
         ]
       },
       [ '/version', '版本' ],

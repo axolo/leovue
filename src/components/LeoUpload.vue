@@ -1,10 +1,14 @@
 <template>
   <div>
     <leo-dialog :title="title" :visible="visible" @close="close">
-      <div class="leo-tips leo-message">{{step}}</div>
+      <div class="leo-tips leo-message">
+        <span v-if="warning">{{warning}} <button class="leo-button" @click="cancel">retry</button></span>
+        <span v-else>{{step}}</span>
+        <button class="leo-button leo-upload" @click="upload" v-if="completed">Upload</button>
+      </div>
       <input class="leo-input-file" type="file" @change="change" :multiple="multiple" v-if="choose">
       <div class="leo-tips" v-else>
-        <table class="leo-table" v-if="files">
+        <table class="leo-table" v-if="files.length">
           <caption class="leo-caption">Picks: {{files.length}}</caption>
           <thead>
               <tr>
@@ -31,8 +35,7 @@
             </tr>
           </tbody>
         </table>
-        <button class="leo-button" @click="upload" v-if="completed">Upload</button>
-        <table class="leo-table" v-if="bans">
+        <table class="leo-table" v-if="bans.length">
           <caption class="leo-caption">
             Bans: {{bans.length}}
             [<span class="show-bans" v-if="showBans" @click="showBans=false">hide</span>
@@ -45,6 +48,7 @@
                 <th class="leo-th">Size</th>
                 <th class="leo-th">Ext</th>
                 <th class="leo-th">By</th>
+                <th class="leo-th">Hash(MD5)</th>
             </tr>
           </thead>
           <tbody v-if="showBans">
@@ -54,21 +58,24 @@
               <td class="leo-td leo-right">{{file.size | bytes}}</td>
               <td class="leo-td leo-left">{{file.ext}}</td>
               <td class="leo-td leo-center">{{file.ban.join(', ')}}</td>
+              <td class="leo-td leo-left">{{file.hash}}</td>
             </tr>
           </tbody>
         </table>
       </div>
-      <div class="leo-tips leo-message" v-if="filter">{{filter}}</div>
+      <template slot="footer">
+        <div class="leo-filter" v-if="filter">{{filter}}</div>
+      </template>
     </leo-dialog>
   </div>
 </template>
 
 <script>
-import _ from 'lodash'
-import browserMd5File from 'browser-md5-file'
-import axios from 'axios'
 import moment from 'moment'
 import bytes from 'bytes'
+import browserMd5File from 'browser-md5-file'
+import _ from 'lodash'
+import axios from 'axios'
 import LeoDialog from './LeoDialog'
 export default {
   name: 'LeoUpload',
@@ -78,7 +85,7 @@ export default {
     visible: { type: Boolean },                  // 对话框可见性
     types: { type: Array, default: () => [] },   // 文件格式
     size: { type: Number, default: 0 },          // 最大文件大小
-    count: { type: Number, default: 0 },         // 最多文件数量
+    max: { type: Number, default: 0 },         // 最多文件数量
     multiple: { type: Boolean, default: true },  // 多文件上传
     rapid: { type: String, default: '' },        // 急速上传（验证MD5地址）
     action: { type: String, default: '' }        // 上传地址
@@ -86,6 +93,7 @@ export default {
   data() {
     return {
       step: '',               // 状态提示信息
+      warning: '',                // 文件超量
       filter: [],             // 筛选器
       choose: true,           // 文件选择器可见
       completed: false,       // 加载完成（前端）
@@ -96,19 +104,22 @@ export default {
       steps: {
         step1: 'Step 1: Choose',
         step2: 'Step 2: Ban / Pick',
-        step3: 'Step 3: Hash',
-        step4: 'Step 4: Upload',
-        step5: 'Step 5: Response'
+        step3: 'Step 3: Upload',
+        step4: 'Step 4: Response'
+      },
+      status: {
+        ready: 'Ready',
+        hash: 'Hash'
       }
     }
   },
   mounted() {
     let filter = []
-    this.size && filter.push('size<=' + bytes(this.size))
-    this.count && filter.push('qty<=' + this.count)
-    this.types.length && filter.push('type: ' + this.types.join(', '))
+    this.size && filter.push('Size<=' + bytes(this.size))
+    this.max && filter.push('Max<=' + this.max)
+    this.types.length && filter.push('Type: ' + this.types.join(', '))
     this.step = this.steps.step1
-    filter.length && (this.filter = 'Filter: ' + filter.join(', '))
+    filter.length && (this.filter = 'Filters: ' + filter.join(', '))
   },
   filters: {
     bytes: function(n) {
@@ -128,18 +139,15 @@ export default {
       })
     },
     cancel() {
-      this.files = []
-      this.bans = []
+      this.warning = ''
+      this.step = this.steps.step1
       this.choose = true
       this.completed = false
-      this.status = filter
     },
     remove(i) {
       this.files[i].ban.push('remove')    // 落选原因
       this.bans.push(this.files[i])       // 进入落选
       this.files.splice(i, 1)             // 退出中选
-      console.log(this.files)
-      console.log(this.bans)
     },
     change(e) {
       /**
@@ -167,8 +175,9 @@ export default {
        * 2. 通过事件传递上传结果给父组件
        */
       // 一、筛选
-      this.step = this.steps.step2
       this.choose = false
+      this.files = []
+      this.bans = []
       this.target = e.target.files
       let n = e.target.files.length
       for(let i=0; i<n; i++) {
@@ -178,9 +187,7 @@ export default {
           ext: this.target[i].name.split('.').pop().toLowerCase(),
           size: this.target[i].size,
           lastModified: this.target[i].lastModified,
-          hash: '',
-          ban: [],
-          status: ''
+          ban: []
         }
         // 1. 文件类型错误
         if(this.types.length && -1 === this.types.indexOf(file.ext)) {
@@ -196,49 +203,44 @@ export default {
         }
         // 3. 正常情况
         this.files.push(file)
+
       }
 
-      // 二、计算
-      let m = this.files.length
-      let j = 0
-      this.files.forEach((file) => {
-        browserMd5File(this.target[file.id], (err, md5) => {
-          j++
-          this.step = this.steps.step3 + ' ' + j + '/' + m
-          this.files[file.id].hash = md5
-          console.log(err)
+      // 4. 数量判断
+      let pick = this.files.length
+      if(this.max < pick) {
+        this.files = []
+        this.bans = []
+        this.warning = 'Too many files, Max: ' + this.max + ', Picked: ' + pick + '.'
+      } else {
+        // 二、计算
+        let m = this.files.length
+        let j = 0
+        let k = 0
+        this.files.forEach((file) => {
+          file.status = this.status.hash
+          browserMd5File(this.target[file.id], (err, md5) => {
+            if(err) console.log(err)
+            // 剔除 HASH一致的文件
+            if(_.find(this.files, { hash: md5 })) {
+              file.ban.push('hash')                                           // 落选原因
+              this.bans.push(file)                                            // 进入落选
+              this.files.splice(_.findIndex(this.files, {id: file.id}), 1)    // 退出中选
+              k++                                                             // 计数器
+            }
+            // 提示信息
+            file.hash = md5
+            file.status = this.status.ready
+            this.step =
+              this.steps.step2 +
+              ', Choose ' + this.target.length +
+              ', Hash '  + (++j) + ' / ' + m +
+              ', Drop '  + k + ' by unique HASH.'
+            j == m && (this.step += ' Completed!') && (this.completed = true)
+          })
         })
-      })
-    },
-    // change(e) {
-    //   this.choose = false
-    //   this.target = e.target.files
-    //   //
-    //   let n = e.target.files.length
-    //   let c = 0
-    //   for(let i=0; i<n; i++) {
-    //     let file = e.target.files[i]
-    //     let ext = file.name.split('.').pop()
-    //     // 文件格式不符合要求，剔除
-    //     if(this.types.length && -1 === this.types.indexOf(ext)) {
-    //       this.files.splice(i, 1)
-    //     } else {
-    //       browserMd5File(file, (err, md5) => {
-    //         this.files.push({
-    //           id: i,
-    //           name: file.name,
-    //           size: this.getSize(file.size),
-    //           type: file.type,
-    //           md5: md5,
-    //           lastModified: moment(file.lastModified).format('YYYY-MM-DD HH:mm:ss'),
-    //           status: 'Ready'
-    //         })
-    //         this.status = ['Step 2: File loading... ', ++c, '/', n].join(' ')
-    //         c == n && (this.status += ', Completed!') && (this.completed = true)
-    //       })
-    //     }
-    //   }
-    // }
+      }
+    }
   }
 }
 </script>
@@ -299,7 +301,7 @@ export default {
   text-align: center;
 }
 .leo-over {
-  width: 240px;
+  max-width: 240px;
   text-overflow:ellipsis;
   white-space:nowrap;
   overflow:hidden;
@@ -309,5 +311,12 @@ export default {
   cursor: pointer;
   text-decoration-line: underline;
   color: #43B17B;
+}
+.leo-filter {
+  padding: 5px;
+  color: darkslategrey;
+}
+.leo-upload {
+  float: right;
 }
 </style>
