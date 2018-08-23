@@ -14,5 +14,5 @@ run/
 # uploads
 files/
 tmp/
-!files/.gitkeep
-!tmp/.gitkeep
+!/files/.gitkeep
+!/tmp/.gitkeep

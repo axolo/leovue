@@ -19,6 +19,7 @@ module.exports = appInfo => {
   config.multipart = {
     fileSize: '5000mb',
     fileExtensions: [
+      '.csv',
       '.xls',
       '.xlsx',
       '.txt',

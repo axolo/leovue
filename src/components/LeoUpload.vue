@@ -117,20 +117,20 @@ export default {
     size: { type: Number, default: 0 },           // 最大文件大小
     max: { type: Number, default: 0 },            // 最多文件数量
     multiple: { type: Boolean, default: true },   // 多文件上传
-    rapid: { },                      // 急速上传（验证MD5地址）
+    rapid: { default: false },                    // 急速上传（验证MD5地址）
     action: { type: Object }                      // 上传地址
   },
   data() {
     return {
-      step: '',               // 状态提示信息
-      warning: '',            // 文件超量
-      filter: [],             // 筛选器
-      choose: true,           // 文件选择器可见
-      completed: false,       // 加载完成（前端）
+      target: '',             // File对象（原始）
       files: [],              // 文件列表（中选）
       bans: [],               // 文件列表（落选）
       uploaded: [],           // 上传成功的列表
-      target: '',             // File对象（原始）
+      filter: [],             // 筛选器
+      step: '',               // 状态提示信息
+      warning: '',            // 文件超量
+      choose: true,           // 文件选择器可见
+      completed: false,       // 加载完成（前端）
       showBans: false,        // 查看落选
       steps: {
         step1: 'Step 1: Choose',
@@ -161,42 +161,45 @@ export default {
     }
   },
   methods: {
+    // 关闭对话框，后台继续在操作
     close() {
       this.$emit('update:visible', false)
     },
+    // 常规上传
     normalUpload(file, i) {
       let data = new FormData()
       data.append('file', this.target[file.id])
       Object.assign(this.action, { data: data })
+      // TODO: 进度条不体现
       let config = { onUploadProgress: progressEvent => {
         console.log(progressEvent.loaded)
         console.log(progressEvent.total)
       }}
       axios(this.action, config).then(res => {
         this.uploaded.push(res.data)
-        // this.files[i].status = 'done'
-      })
+        this.files[i].status = 'done'
+      }).catch(err => console.log(err))
     },
+    // 急速上传
     rapidUpload(file, i) {
-      this.rapid.url = this.rapid.url.replace(/{{hash}}/g, file.hash)
-      axios(this.rapid, res => {
-        if(res.data[this.rapid.hashkey] && res.data[this.rapid.hashkey] === file.hash) {
+      let url = this.rapid.url.replace(/%%hash_value%%/g, file.hash)
+      axios({ method: this.rapid.method, url: url}).then(res => {
+        if(res.data[this.rapid.hash_key] && res.data[this.rapid.hash_key] === file.hash) {
           this.files[i].status = 'rapid'
           this.uploaded.push(res.data)
         } else {
           this.normalUpload(file, i)
         }
-      })
+      }).catch(err => console.log(err))
+      url = ''        // !!! 重新初始化url，否则不会被下一个hash替换
     },
+    // 执行上传
     upload() {
       this.completed = false
       let len = this.files.length
       this.files.forEach((file, i) => {
-        if(this.rapid) {
-          this.rapidUpload(file, i)
-        } else {
-          this.normalUpload(file, i)
-        }
+        this.rapid && this.rapidUpload(file, i) || this.normalUpload(file, i)
+        // TODO: 计数器不计数
         let hit = this.uploaded.length
         this.warning = 'Upload ' + hit + ' / ' + len
         hit == len && (this.warning += ', Completed!')
@@ -204,11 +207,13 @@ export default {
       // console.log(this.uploaded)
       console.log(this.files)
     },
+    // 结果回传（事件）数据发射到父组件
     result() {
       this.$emit('result', this.uploaded)
       this.cancel()
       this.close()
     },
+    // 全部取消
     cancel() {
       this.warning = ''
       this.step = this.steps.step1
@@ -217,11 +222,13 @@ export default {
       this.uploaded = []
       this.hit = 0
     },
+    // 删除选择项
     remove(i) {
       this.files[i].ban.push('remove')    // 落选原因
       this.bans.push(this.files[i])       // 进入落选
       this.files.splice(i, 1)             // 退出中选
      },
+    // 监听文件选择框变化
     change(e) {
       // 一、筛选
       this.choose = false
