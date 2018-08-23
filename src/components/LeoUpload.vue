@@ -30,9 +30,11 @@
   <div>
     <leo-dialog :title="title" :visible="visible" @close="close">
       <div class="leo-tips leo-message">
-        <span v-if="warning">{{warning}} [<a class="leo-span-a" @click="cancel">Reselect</a>]</span>
+        <span v-if="warning">{{warning}}</span>
         <span v-else>{{step}}</span>
+        <span v-if="!files.length">[<a class="leo-span-a" @click="cancel">Reselect</a>]</span>
         <button class="leo-button leo-upload" @click="upload" v-if="completed">Upload</button>
+        <button class="leo-button leo-upload" @click="result" v-if="uploaded.length">Send Result</button>
       </div>
       <input class="leo-input-file" type="file" @change="change" :multiple="multiple" v-if="choose">
       <div class="leo-tips" v-else>
@@ -115,18 +117,19 @@ export default {
     size: { type: Number, default: 0 },           // 最大文件大小
     max: { type: Number, default: 0 },            // 最多文件数量
     multiple: { type: Boolean, default: true },   // 多文件上传
-    rapid: { type: Object },                      // 急速上传（验证MD5地址）
+    rapid: { },                      // 急速上传（验证MD5地址）
     action: { type: Object }                      // 上传地址
   },
   data() {
     return {
       step: '',               // 状态提示信息
-      warning: '',                // 文件超量
+      warning: '',            // 文件超量
       filter: [],             // 筛选器
       choose: true,           // 文件选择器可见
       completed: false,       // 加载完成（前端）
       files: [],              // 文件列表（中选）
       bans: [],               // 文件列表（落选）
+      uploaded: [],           // 上传成功的列表
       target: '',             // File对象（原始）
       showBans: false,        // 查看落选
       steps: {
@@ -161,43 +164,64 @@ export default {
     close() {
       this.$emit('update:visible', false)
     },
-    upload() {
-      // TODO: 急速上传
-      this.files.forEach((file, i) => {
-          let data = new FormData()
-          data.append('file', this.target[file.id])
-          let config = { onUploadProgress: progressEvent => {
-            let complete = (progressEvent.loaded / progressEvent.total * 100 | 0) + '%'
-            this.$set(this.files, i, {
-              status: Math.random(),
-              id: this.files[i].id,
-              name: this.files[i].name,
-              hash: this.files[i].hash,
-              size: this.files[i].size,
-              ext: this.files[i].ext,
-              ban: this.files[i].ban,
-              lastModified: this.files[i].lastModified
-            })
-          }}
-          Object.assign(this.action, { data: data })
-          axios(this.action, config).then(res => {
-            console.log(res)
-          })
+    normalUpload(file, i) {
+      let data = new FormData()
+      data.append('file', this.target[file.id])
+      Object.assign(this.action, { data: data })
+      let config = { onUploadProgress: progressEvent => {
+        console.log(progressEvent.loaded)
+        console.log(progressEvent.total)
+      }}
+      axios(this.action, config).then(res => {
+        this.uploaded.push(res.data)
+        // this.files[i].status = 'done'
       })
+    },
+    rapidUpload(file, i) {
+      this.rapid.url = this.rapid.url.replace(/{{hash}}/g, file.hash)
+      axios(this.rapid, res => {
+        if(res.data[this.rapid.hashkey] && res.data[this.rapid.hashkey] === file.hash) {
+          this.files[i].status = 'rapid'
+          this.uploaded.push(res.data)
+        } else {
+          this.normalUpload(file, i)
+        }
+      })
+    },
+    upload() {
+      this.completed = false
+      let len = this.files.length
+      this.files.forEach((file, i) => {
+        if(this.rapid) {
+          this.rapidUpload(file, i)
+        } else {
+          this.normalUpload(file, i)
+        }
+        let hit = this.uploaded.length
+        this.warning = 'Upload ' + hit + ' / ' + len
+        hit == len && (this.warning += ', Completed!')
+      })
+      // console.log(this.uploaded)
+      console.log(this.files)
+    },
+    result() {
+      this.$emit('result', this.uploaded)
+      this.cancel()
+      this.close()
     },
     cancel() {
       this.warning = ''
       this.step = this.steps.step1
       this.choose = true
       this.completed = false
+      this.uploaded = []
+      this.hit = 0
     },
     remove(i) {
       this.files[i].ban.push('remove')    // 落选原因
       this.bans.push(this.files[i])       // 进入落选
       this.files.splice(i, 1)             // 退出中选
-      console.log(this.target)
-      // this.target.splice(i, 1)             // 退出中选
-    },
+     },
     change(e) {
       // 一、筛选
       this.choose = false

@@ -9,7 +9,9 @@
       :size="50000000"
       :max="10"
       :multiple="true"
-      :action="action">
+      :action="action"
+      :rapid="rapid"
+      @result="result">
     </leo-upload>
     <button @click="open">上传</button>
   </div>
@@ -24,17 +26,15 @@ export default {
       title: '多文件过滤异步急速上传',
       visible: false,
       types: ['zip', 'txt', 'jpg', 'png', 'pdf', 'exe', 'xls', 'xlsx'],
-      action: {
-        method: 'POST',
-        url: 'https://sh.file.myqcloud.com'
-      },
-      rapid: {
-        method: 'GET',
-        url: 'http://localhost:7001/files/{{hash}}?token=666'
-      }
+      action: { method: 'POST', url: 'http://localhost:7001/files' },
+      rapid: false
+      // rapid: { method: 'GET', url: 'http://localhost:7001/files/{{hash}}', hashkey: 'md5' }
     }
   },
   methods: {
+    result(res) {
+      console.log(res)
+    },
     open() {
       this.visible = true
     }
