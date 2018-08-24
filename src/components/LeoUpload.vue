@@ -1,6 +1,86 @@
-<!-- /**
+<template>
+  <div id="leo-upload">
+    <leo-dialog :title="title" :visible="visible" @close="close">
+      <div class="leo-tips leo-message">
+        <span v-if="warning">{{warning}}</span>
+        <span v-else>{{step}}</span>
+        <span v-if="!files.length">[<a class="leo-span-a" @click="cancel">Reselect</a>]</span>
+        <button class="leo-button leo-upload" @click="upload" v-if="completed">Upload</button>
+        <button class="leo-button leo-upload" @click="result" v-if="uploaded.length">Send Result</button>
+      </div>
+      <input class="leo-input-file" type="file" @change="change" :multiple="multiple" v-if="choose">
+      <div class="leo-tips" v-else>
+        <table class="leo-table" v-if="files.length">
+          <caption class="leo-caption">Picks: {{files.length}}</caption>
+          <thead>
+              <tr>
+                <th class="leo-th">#</th>
+                <th class="leo-th">Name</th>
+                <th class="leo-th">Size</th>
+                <th class="leo-th">Hash(MD5)</th>
+                <th class="leo-th">Status</th>
+                <th class="leo-th">
+                  <button class="leo-button-circle" @click="cancel" title="Remove all" v-if="completed">x</button>
+                </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(file, index) in files" :key="file.id">
+              <td class="leo-td">{{++index}}</td>
+              <td class="leo-td"><span class="leo-over" :title="file.name">{{file.name}}</span></td>
+              <td class="leo-td leo-right">{{file.size | bytes}}</td>
+              <td class="leo-td leo-code">{{file.hash}}</td>
+              <td class="leo-td leo-center">{{file.status}}</td>
+              <td class="leo-td leo-center">
+                <span v-if="file.status!=='Done' && file.status!=='Rapid'">
+                  <button class="leo-button-circle" @click="remove(index-1)" :title="'Remove '+index">x</button>
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <table class="leo-table" v-if="bans.length">
+          <caption class="leo-caption">
+            Bans: {{bans.length}}
+            [<span class="leo-span-a" v-if="showBans" @click="showBans=false">hide</span>
+            <span class="leo-span-a" v-else @click="showBans=true">show</span>]
+          </caption>
+          <thead v-if="showBans">
+            <tr>
+              <th class="leo-th">#</th>
+              <th class="leo-th">Name</th>
+              <th class="leo-th">Size</th>
+              <th class="leo-th">Ext</th>
+              <th class="leo-th">By</th>
+              <th class="leo-th">Hash(MD5)</th>
+            </tr>
+          </thead>
+          <tbody v-if="showBans">
+            <tr v-for="(file, index) in bans" :key="file.id">
+              <td class="leo-td">{{++index}}</td>
+              <td class="leo-td"><span class="leo-over" :title="file.name">{{file.name}}</span></td>
+              <td class="leo-td leo-right">{{file.size | bytes}}</td>
+              <td class="leo-td leo-left">{{file.ext}}</td>
+              <td class="leo-td leo-center">{{file.ban.join(', ')}}</td>
+              <td class="leo-td leo-left">{{file.hash}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <template slot="footer">
+        <div class="leo-filter" v-if="filter">{{filter}}</div>
+      </template>
+    </leo-dialog>
+  </div>
+</template>
+
+<script>
+/**
   * 多文件异步可筛选支持急速上传的上传组件
   * =======================================
+  * TODO: 1. 优化提示逻辑（整合warning、step）
+  * TODO: 2. 减少变量耦合（this.files贯穿）
+  * TODO: 3. 整合精简功能（分支逻辑太大太多）
   * 一、筛选
   * --------
   * 1. 赋值
@@ -23,84 +103,8 @@
   * 5. 上传失败，允许重试上传，并更新状态（status: 'failed'）
   * 四、返回
   * --------
-  * 1. TODO: 客户端计算的HASH与服务端不一致的是否删除？
-  * 2. 通过事件传递上传结果给父组件
-*/ -->
-<template>
-  <div>
-    <leo-dialog :title="title" :visible="visible" @close="close">
-      <div class="leo-tips leo-message">
-        <span v-if="warning">{{warning}}</span>
-        <span v-else>{{step}}</span>
-        <span v-if="!files.length">[<a class="leo-span-a" @click="cancel">Reselect</a>]</span>
-        <button class="leo-button leo-upload" @click="upload" v-if="completed">Upload</button>
-        <button class="leo-button leo-upload" @click="result" v-if="uploaded.length">Send Result</button>
-      </div>
-      <input class="leo-input-file" type="file" @change="change" :multiple="multiple" v-if="choose">
-      <div class="leo-tips" v-else>
-        <table class="leo-table" v-if="files.length">
-          <caption class="leo-caption">Picks: {{files.length}}</caption>
-          <thead>
-              <tr>
-                <th class="leo-th">#</th>
-                <th class="leo-th">Name</th>
-                <th class="leo-th">Size</th>
-                <th class="leo-th">Hash(MD5)</th>
-                <th class="leo-th">Status</th>
-                <th class="leo-th">
-                  <button class="leo-button-circle" @click="cancel" title="Remove all">x</button>
-                </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(file, index) in files" :key="file.id">
-              <td>{{++index}}</td>
-              <td class="leo-td"><span class="leo-over" :title="file.name">{{file.name}}</span></td>
-              <td class="leo-td leo-right">{{file.size | bytes}}</td>
-              <td class="leo-td leo-code">{{file.hash}}</td>
-              <td class="leo-td leo-center">{{file.status}}</td>
-              <td class="leo-td leo-center">
-                <button class="leo-button-circle" @click="remove(index-1)" :title="'Remove '+index">x</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <table class="leo-table" v-if="bans.length">
-          <caption class="leo-caption">
-            Bans: {{bans.length}}
-            [<span class="leo-span-a" v-if="showBans" @click="showBans=false">hide</span>
-            <span class="leo-span-a" v-else @click="showBans=true">show</span>]
-          </caption>
-          <thead v-if="showBans">
-              <tr>
-                <th class="leo-th">#</th>
-                <th class="leo-th">Name</th>
-                <th class="leo-th">Size</th>
-                <th class="leo-th">Ext</th>
-                <th class="leo-th">By</th>
-                <th class="leo-th">Hash(MD5)</th>
-            </tr>
-          </thead>
-          <tbody v-if="showBans">
-            <tr v-for="(file, index) in bans" :key="file.id">
-              <td>{{++index}}</td>
-              <td class="leo-td"><span class="leo-over" :title="file.name">{{file.name}}</span></td>
-              <td class="leo-td leo-right">{{file.size | bytes}}</td>
-              <td class="leo-td leo-left">{{file.ext}}</td>
-              <td class="leo-td leo-center">{{file.ban.join(', ')}}</td>
-              <td class="leo-td leo-left">{{file.hash}}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <template slot="footer">
-        <div class="leo-filter" v-if="filter">{{filter}}</div>
-      </template>
-    </leo-dialog>
-  </div>
-</template>
-
-<script>
+  * 1. 通过事件传递上传结果给父组件
+*/
 import moment from 'moment'
 import bytes from 'bytes'
 import browserMd5File from 'browser-md5-file'
@@ -140,7 +144,11 @@ export default {
       },
       status: {
         ready: 'Ready',
-        hash: 'Hash'
+        hash: 'Hashing',
+        uploading: 'Uploading...',
+        done: 'Done',
+        rapid: 'Rapid',
+        error: 'Error'
       }
     }
   },
@@ -161,51 +169,63 @@ export default {
     }
   },
   methods: {
-    // 关闭对话框，后台继续在操作
     close() {
       this.$emit('update:visible', false)
     },
     // 常规上传
     normalUpload(file, i) {
+      let len = this.files.length
       let data = new FormData()
-      data.append('file', this.target[file.id])
-      Object.assign(this.action, { data: data })
-      // TODO: 进度条不体现
-      let config = { onUploadProgress: progressEvent => {
-        console.log(progressEvent.loaded)
-        console.log(progressEvent.total)
+      let config = {onUploadProgress: progressEvent => {
+        this.$set(this.files[i], 'status', (progressEvent.loaded / progressEvent.total * 100).toFixed(1) + '%')
       }}
-      axios(this.action, config).then(res => {
-        this.uploaded.push(res.data)
-        this.files[i].status = 'done'
-      }).catch(err => console.log(err))
+      data.append('file', this.target[file.id])
+      Object.assign(this.action, { data: data }, config)
+      this.files[i].status = this.status.uploading
+      axios(this.action).then(res => {
+        if(res.data[this.rapid.hash_key] === file.hash) {
+          this.uploaded.push(res.data)
+          this.files[i].status = this.status.done
+        } else {
+          this.files[i].status = this.status.error
+        }
+        let hit = this.uploaded.length
+        this.warning = 'Upload ' + hit + ' / ' + len
+        hit == len && (this.warning += ', Completed!')
+      }).catch(err => {
+        this.files[i].status = this.status.error
+        console.log(err)
+      })
     },
     // 急速上传
     rapidUpload(file, i) {
+      let len = this.files.length
       let url = this.rapid.url.replace(/%%hash_value%%/g, file.hash)
+      this.files[i].status = this.status.uploading
       axios({ method: this.rapid.method, url: url}).then(res => {
         if(res.data[this.rapid.hash_key] && res.data[this.rapid.hash_key] === file.hash) {
-          this.files[i].status = 'rapid'
           this.uploaded.push(res.data)
+          this.files[i].status = this.status.rapid
+          let hit = this.uploaded.length
+          this.warning = 'Upload ' + hit + ' / ' + len
+          hit == len && (this.warning += ', Completed!')
         } else {
           this.normalUpload(file, i)
         }
-      }).catch(err => console.log(err))
+      }).catch(err => {
+        console.log(err)
+        this.files[i].status = this.status.error
+      })
       url = ''        // !!! 重新初始化url，否则不会被下一个hash替换
     },
     // 执行上传
     upload() {
       this.completed = false
-      let len = this.files.length
       this.files.forEach((file, i) => {
-        this.rapid && this.rapidUpload(file, i) || this.normalUpload(file, i)
-        // TODO: 计数器不计数
-        let hit = this.uploaded.length
-        this.warning = 'Upload ' + hit + ' / ' + len
-        hit == len && (this.warning += ', Completed!')
+        if(this.rapid) this.rapidUpload(file, i)
+        else this.normalUpload(file, i)
       })
       // console.log(this.uploaded)
-      console.log(this.files)
     },
     // 结果回传（事件）数据发射到父组件
     result() {
@@ -290,8 +310,9 @@ export default {
             this.step =
               this.steps.step2 +
               ', Choose ' + this.target.length +
+              ', Ban ' + this.bans.length +
               ', Hash '  + (++j) + ' / ' + m +
-              ', Drop '  + k + ' by unique HASH.'
+              ', Drop '  + k + ' by UNIQUE.'
             j == m && (this.step += ' Completed!') && (this.completed = true)
           })
         })

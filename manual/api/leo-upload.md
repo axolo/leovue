@@ -3,7 +3,9 @@ leo-upload
 
 示例
 ----
-
+<ClientOnly>
+  <labs-leo-upload/>
+</ClientOnly>
 
 说明
 ----
@@ -12,10 +14,156 @@ leo-upload
 
 ![文件上传](./assets/leo-upload.png)
 
+![动图演示](./assets/leo-upload-gif.gif)
+
+代码
+----
+```vue
+<template>
+  <div id="leo-upload">
+    <leo-upload
+      :title="title"
+      :visible.sync="visible"
+      :types="types"
+      :size="size"
+      :max="10"
+      :multiple="true"
+      :action="action"
+      :rapid="rapid"
+      @result="result">
+    </leo-upload>
+    <div class="input">
+      <label for="action">文件上传地址：</label>
+      <input type="text" class="url" name="action" v-model="action.url">
+    </div>
+    <div class="input">
+      <label for="rapid">急传取值地址：</label>
+      <input type="text" class="url" name="rapid" v-model="rapid.url">
+      <div class="tip">
+        如：急传取值地址为
+        <code>http://localhost:7001/files?md5=25feb93e5e1b18f5596f384f214b1242</code>，
+        <br>
+        则：<code>%%hash_value%%
+        </code>即对应地址中的<code>25feb93e5e1b18f5596f384f214b1242</code>。
+      </div>
+    </div>
+    <div class="input">
+      <label for="hash_key">急传返回键名：</label>
+      <input type="text" class="url" name="hash_key" v-model="rapid.hash_key">
+      <div class="tip">
+        如：从急传取值地址返回
+        <code>{ "md5": "25feb93e5e1b18f5596f384f214b1242" }</code>，
+        <br>
+        则：<code>hash_key</code>为返回中对应的键名<code>md5</code>
+      </div>
+    </div>
+    <div class="input">
+      <button @click="open">上传</button>
+      <button @click="clear" v-if="files.length">清除</button>
+    </div>
+    <ol v-if="files.length" class="file-list">
+      <li v-for="(file,index) in files" :key="index">{{file.md5}}</li>
+    </ol>
+  </div>
+</template>
+
+<script>
+import { LeoUpload } from '@axolo/leovue'
+export default {
+  components: { LeoUpload },
+  data() {
+    return {
+      files: [],
+      title: '多文件过滤异步急速上传',
+      visible: false,
+      size: 500 * 1024 * 1024,  // 500MB
+      types: ['zip', 'txt', 'csv', 'jpg', 'png', 'pdf', 'exe', 'xls', 'xlsx'],
+      action: {
+        method: 'POST',
+        url: 'http://localhost:7001/files'
+      },
+      rapid: {
+        method: 'GET',
+        url: 'http://localhost:7001/files/%%hash_value%%',
+        hash_key: 'md5'
+      }
+    }
+  },
+  methods: {
+    result(res) {
+      this.files = res
+    },
+    open() {
+      this.visible = true
+    },
+    clear() {
+      this.files = []
+    }
+  }
+}
+</script>
+
+<style scoped>
+#leo-upload {
+  margin: 5px;
+}
+.input {
+  margin-bottom: 5px;
+}
+.url {
+  width: 300px;
+}
+.tip {
+  font-size: small;
+  color: darkcyan;
+}
+.file-list {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: small;
+}
+code {
+  padding: 0 5px;
+}
+</style>
+```
+
+
+属性
+----
+|   名称   |  类型   |        说明        |     默认值     | 必填 |
+| -------- | ------- | ------------------ | -------------- | ---- |
+| title    | String  | 对话框标题         |                |      |
+| visible  | Boolean | 对话框可见性       |                |      |
+| types    | Array   | 文件格式           | []             |      |
+| size     | Number  | 单文件最大尺寸限制 | 0 = 不限制     |      |
+| max      | Number  | 最大文件总量       | 0 = 不限制     |      |
+| multiple | Boolean | 允许多文件上传     | true = 允许    |      |
+| action   | Object  | 上传地址参数       |                |      |
+| rapid    | Object  | 启用急传参数       | false = 不启用 |      |
+
+::: tip rapid
+- `url`属性的`%%hash_value%%`: 对应文件哈希值（替换）
+- `hash_key`属性：对应返回的哈希值所在键名
+:::
+
+::: danger 服务器限制
+请注意，服务器也会对文件上传的格式、大小、数量等做限制，请务必跟服务器配合。
+避免出现显示上传成功，但服务器却没有接受文件，更新对应数据的情况发生。
+:::
+
+
+事件
+----
+| 名称  |   值    |             说明              |
+| ----- | ------- | ----------------------------- |
+| result | Object | 成功上传的文件的哈希对象数组  |
+
+
 服务器
 ------
-必须有可以处理文件上传的服务器，任何支持文件上传的服务器都可以。本文以[Egg.js](https://eggjs.org/zh-cn/)为例，
-`Egg.js`默认以内置插件[egg-multipart](https://eggjs.org/zh-cn/plugins/multipart.html)处理文件上传。
+文件上传功能必须搭配能处理文件上传的服务器使用，理论上，任何支持文件上传功能的服务器都可以。
+若开启急速上传，需要服务器支持`MD5`验证，且符合相应数据格式。本文以[Egg.js](https://eggjs.org/zh-cn/)作为服务器实现，
+`Egg.js`默认内置了[egg-multipart](https://eggjs.org/zh-cn/plugins/multipart.html)插件用于处理文件上传。
 
 #### 安装
 ```bash

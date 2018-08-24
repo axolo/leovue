@@ -5,7 +5,7 @@
  */
 'use strict'
 const path = require('path')
-const fs = require('fs')
+const fs = require('fs-extra')
 const _ = require('lodash')
 const crypto = require('crypto')
 const sendToWormhole = require('stream-wormhole')
@@ -25,13 +25,29 @@ class FilesController extends Controller {
     ]
   }
 
+  async download(id) {
+    const filePath = path.resolve(this.app.config.static.dir, 'hello.txt');
+    this.ctx.attachment('hello.txt');
+    this.ctx.set('Content-Type', 'application/octet-stream');
+    this.ctx.body = fs.createReadStream(filePath);
+  }
+
   async index() {
     this.ctx.body = this.files
   }
 
   async show() {
-    let file = _.find(this.files, { "md5": this.ctx.params.id })
-    this.ctx.body = file ? file : { "error": 404 }
+    const { ctx } = this
+    let file = _.find(this.files, { "md5": ctx.params.id })
+    if(file) {
+      if(ctx.queries.download !== 'true') {
+        ctx.body = file
+      } else {
+        await this.download(ctx.params.id)
+      }
+    } else {
+      ctx.body = { "error": 404 }
+    }
   }
 
   // 此处为简单测试，不考虑文件夹逻辑，简单粗暴的放在固定目录下，也不考虑后台操作失败处理。
@@ -46,11 +62,12 @@ class FilesController extends Controller {
     rs.on('data', chunk => { hash.update(chunk) && ws.write(chunk) })
     rs.on('end', () => { ws.end() })
     rs.on('error', () => { sendToWormhole(rs) && console.log(err) })
-    await awaitReadStream(rs)           // 你走，我断后
+    await awaitReadStream(rs)           // !!! 你走，我断后
     const md5 = hash.digest('hex')
     ctx.body = { md5: md5 }
+    // 继续后台相关操作，移动文件，删除临时目录，相关信息写入数据库，等等
     const fix = path.join('files', md5 + path.extname(rs.filename).toLocaleLowerCase())
-    fs.rename(tmp, fix, (err) => { err && console.log(err) || fs.rmdir(dir) })  // 继续后台相关操作
+    fs.move(tmp, fix, { overwrite: true }, (err) => { err && console.log(err) || fs.remove(dir) })
   }
 
 }
