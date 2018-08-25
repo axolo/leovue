@@ -2,16 +2,17 @@
   <div id="leo-upload">
     <leo-dialog :title="title" :visible="visible" @close="close">
       <div class="leo-tips leo-message">
-        <span v-if="warning">{{warning}}</span>
-        <span v-else>{{step}}</span>
-        <span v-if="!files.length">[<a class="leo-span-a" @click="cancel">Reselect</a>]</span>
-        <button class="leo-button leo-upload" @click="upload" v-if="completed">Upload</button>
-        <button class="leo-button leo-upload" @click="result" v-if="uploaded.length">Send Result</button>
+        <span>
+          {{message}}
+          <span v-if="failed" class="leo-span-a" @click="clear">[Restart]</span>
+        </span>
+        <button class="leo-button leo-upload" @click="upload(picks)" v-if="ready">Upload</button>
+        <button class="leo-button leo-upload" @click="result" v-if="success.length">Send Result</button>
       </div>
-      <input class="leo-input-file" type="file" @change="change" :multiple="multiple" v-if="choose">
+      <input class="leo-input-file" type="file" @change="change" :multiple="multiple" v-if="draft">
       <div class="leo-tips" v-else>
-        <table class="leo-table" v-if="files.length">
-          <caption class="leo-caption">Picks: {{files.length}}</caption>
+        <table class="leo-table" v-if="picks.length">
+          <caption class="leo-caption">Picks: {{picks.length}}</caption>
           <thead>
               <tr>
                 <th class="leo-th">#</th>
@@ -20,20 +21,27 @@
                 <th class="leo-th">Hash(MD5)</th>
                 <th class="leo-th">Status</th>
                 <th class="leo-th">
-                  <button class="leo-button-circle" @click="cancel" title="Remove all" v-if="completed">x</button>
+                  <button class="leo-button-circle" @click="clear" title="Clear" v-if="ready">-</button>
+                  <button class="leo-button-circle" @click="again" title="Manual" v-else-if="failed">+</button>
                 </th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(file, index) in files" :key="file.id">
+            <tr v-for="(file, index) in picks" :key="file.id">
               <td class="leo-td">{{++index}}</td>
               <td class="leo-td"><span class="leo-over" :title="file.name">{{file.name}}</span></td>
               <td class="leo-td leo-right">{{file.size | bytes}}</td>
               <td class="leo-td leo-code">{{file.hash}}</td>
-              <td class="leo-td leo-center">{{file.status}}</td>
               <td class="leo-td leo-center">
-                <span v-if="file.status!=='Done' && file.status!=='Rapid'">
-                  <button class="leo-button-circle" @click="remove(index-1)" :title="'Remove '+index">x</button>
+                <span v-if="file.detail" class="leo-span-a" :title="file.detail">{{file.status}}</span>
+                <span v-else>{{file.status}}</span>
+              </td>
+              <td class="leo-td leo-center">
+                <span v-if="file.status==status.ready">
+                  <button class="leo-button-circle" @click="remove(file.id)" :title="'Remove '+file.id">-</button>
+                </span>
+                <span v-if="file.status==status.failed">
+                  <button class="leo-button-circle" @click="retry(file.id)" :title="'Retry '+file.id">+</button>
                 </span>
               </td>
             </tr>
@@ -68,7 +76,12 @@
         </table>
       </div>
       <template slot="footer">
-        <div class="leo-filter" v-if="filter">{{filter}}</div>
+        <div class="leo-filter">
+          <span>Filter:</span>
+          <span v-if="size">Size &lt;= {{size | bytes}}. </span>
+          <span v-if="max">Max: {{max}}. </span>
+          <span v-if="types.length">Types: {{types.join(',')}}.</span>
+        </div>
       </template>
     </leo-dialog>
   </div>
@@ -78,13 +91,11 @@
 /**
   * 多文件异步可筛选支持急速上传的上传组件
   * =======================================
-  * TODO: 1. 优化提示逻辑（整合warning、step）
-  * TODO: 2. 减少变量耦合（this.files贯穿）
-  * TODO: 3. 整合精简功能（分支逻辑太大太多）
+  * TODO: 支持多层hash_key，如：data.md5
   * 一、筛选
   * --------
   * 1. 赋值
-  *    监听文件框变化，保存target，赋值给files（注意ID对应）
+  *    监听文件框变化，保存files，赋值给picks（注意ID对应）
   * 2. 过滤
   *    1). 类型：分析文件类型，允许的保留，其余的剔除。其结果转下一道筛选（ban: true）
   *    2). 大小：分析文件大小，超过的剔除。（ban: true）
@@ -118,47 +129,39 @@ export default {
     title: { type: String },                      // 对话框标题
     visible: { type: Boolean },                   // 对话框可见性
     types: { type: Array, default: () => [] },    // 文件格式
-    size: { type: Number, default: 0 },           // 最大文件大小
-    max: { type: Number, default: 0 },            // 最多文件数量
-    multiple: { type: Boolean, default: true },   // 多文件上传
-    rapid: { default: false },                    // 急速上传（验证MD5地址）
-    action: { type: Object }                      // 上传地址
+    size: { type: Number, default: 0 },           // 限制文件大小
+    max: { type: Number, default: 0 },            // 限制文件数量
+    multiple: { type: Boolean, default: true },   // 是否多文件上传
+    action: { type: Object },                     // 上传地址
+    rapid: { default: false }                     // 急速上传（验证MD5地址）
   },
   data() {
     return {
-      target: '',             // File对象（原始）
-      files: [],              // 文件列表（中选）
-      bans: [],               // 文件列表（落选）
-      uploaded: [],           // 上传成功的列表
-      filter: [],             // 筛选器
-      step: '',               // 状态提示信息
-      warning: '',            // 文件超量
-      choose: true,           // 文件选择器可见
-      completed: false,       // 加载完成（前端）
-      showBans: false,        // 查看落选
-      steps: {
-        step1: 'Step 1: Choose',
-        step2: 'Step 2: Ban / Pick',
-        step3: 'Step 3: Upload',
-        step4: 'Step 4: Response'
+      draft: true,                // 文件可否供选
+      message: '',                // 提示信息
+      files: '',                  // Filelist对象
+      picks: [],                  // 中选文件列表
+      bans: [],                   // 落选文件列表
+      ready: false,               // 是否准备就绪
+      showBans: false,            // 落选显示开关
+      success: [],                // 上传成功列表
+      failed: 0,                  // 上传失败计数
+      status: {                   // 文件状态
+        init:       'Init',
+        ready:      'Ready',
+        hash:       'Hashing',
+        uploading:  'Uploading',
+        rapid:      'Rapid',
+        success:    'Sucess',
+        failed:     'Failed'
       },
-      status: {
-        ready: 'Ready',
-        hash: 'Hashing',
-        uploading: 'Uploading...',
-        done: 'Done',
-        rapid: 'Rapid',
-        error: 'Error'
+      messages: {                 // 消息列表
+        none: 'Not enough files.',
+        over: 'Too many fiels. Max ' + this.max,
+        failed: 'All failed. No file uploaded.',
+        uploading: 'Uploading...'
       }
     }
-  },
-  mounted() {
-    let filter = []
-    this.size && filter.push('Size<=' + bytes(this.size))
-    this.max && filter.push('Max<=' + this.max)
-    this.types.length && filter.push('Type: ' + this.types.join(', '))
-    this.step = this.steps.step1
-    filter.length && (this.filter = 'Filters: ' + filter.join(', '))
   },
   filters: {
     bytes: function(n) {
@@ -168,101 +171,131 @@ export default {
       return moment(s).format(f)
     }
   },
-  methods: {
-    close() {
-      this.$emit('update:visible', false)
+  watch: {
+    picks: function(nv, ov) {
+      nv.length == 0 && (this.message = this.messages.none) && (this.draft = true)
+      this.max < nv.length && (this.draft = true)
+      && (this.message = this.messages.over + ', Picks ' + nv.length + ', Bans ' + nv.length + '. ')
     },
-    // 常规上传
-    normalUpload(file, i) {
-      let len = this.files.length
+    bans: function(nv,ov) {
+      nv.length && this.picks.length == 0 && (this.draft = true) && (this.ready = false)
+      && (this.message = this.messages.none + ' Picks ' + nv.length + ', Bans ' + nv.length + '. ')
+    },
+    success: function(nv, ov) {
+    }
+  },
+  mounted() {
+  },
+  methods: {
+    normalUpload(file) {
+      let i = _.findIndex(this.picks, { id: file.id })
+      let len = this.picks.length
       let data = new FormData()
-      let config = {onUploadProgress: progressEvent => {
-        this.$set(this.files[i], 'status', (progressEvent.loaded / progressEvent.total * 100).toFixed(1) + '%')
-      }}
-      data.append('file', this.target[file.id])
-      Object.assign(this.action, { data: data }, config)
-      this.files[i].status = this.status.uploading
-      axios(this.action).then(res => {
-        if(res.data[this.rapid.hash_key] === file.hash) {
-          this.uploaded.push(res.data)
-          this.files[i].status = this.status.done
-        } else {
-          this.files[i].status = this.status.error
+      let config = {
+        onUploadProgress: progressEvent => {
+          this.$set(this.picks[i], 'status',
+          (progressEvent.loaded / progressEvent.total * 100).toFixed(1) + '%')
         }
-        let hit = this.uploaded.length
-        this.warning = 'Upload ' + hit + ' / ' + len
-        hit == len && (this.warning += ', Completed!')
+      }
+      data.append('file', this.files[file.id])
+      Object.assign(this.action, { data: data }, config)
+      this.$set(this.picks[i], 'status', this.status.uploading)
+      this.$set(this.picks[i], 'detail', '')
+      axios(this.action).then(res => {
+        if(res.data[this.action.hash_key] === file.hash) {
+          this.success.push(res.data)
+          this.$set(this.picks[i], 'status', this.status.success)
+        } else {
+          this.$set(this.picks[i], 'status', this.status.failed)
+          this.$set(this.picks[i], 'detail', this.detail.hash)
+        }
+        this.failed = _.filter(this.picks, {status: this.status.failed}).length
+        this.message = 'Success: ' + this.success.length + ', Failed: ' + this.failed + '.'
       }).catch(err => {
-        this.files[i].status = this.status.error
+        this.$set(this.picks[i], 'status', this.status.failed)
+        this.$set(this.picks[i], 'detail', err)
+        this.failed = _.filter(this.picks, {status: this.status.failed}).length
+        this.message = 'Success: ' + this.success.length + ', Failed: ' + this.failed + '.'
         console.log(err)
       })
     },
-    // 急速上传
-    rapidUpload(file, i) {
-      let len = this.files.length
+    rapidUpload(file) {
+      let i = _.findIndex(this.picks, { id: file.id })
+      let len = this.picks.length
       let url = this.rapid.url.replace(/%%hash_value%%/g, file.hash)
-      this.files[i].status = this.status.uploading
+      this.$set(this.picks[i], 'status', this.status.uploading)
+      this.$set(this.picks[i], 'detail', '')
       axios({ method: this.rapid.method, url: url}).then(res => {
         if(res.data[this.rapid.hash_key] && res.data[this.rapid.hash_key] === file.hash) {
-          this.uploaded.push(res.data)
-          this.files[i].status = this.status.rapid
-          let hit = this.uploaded.length
-          this.warning = 'Upload ' + hit + ' / ' + len
-          hit == len && (this.warning += ', Completed!')
+          this.success.push(res.data)
+          this.$set(this.picks[i], 'status', this.status.rapid)
         } else {
           this.normalUpload(file, i)
         }
+        this.failed = _.filter(this.picks, {status: this.status.failed}).length
+        this.message = 'Success: ' + this.success.length + ', Failed: ' + this.failed + '.'
       }).catch(err => {
+        this.$set(this.picks[i], 'status', this.status.failed)
+        this.$set(this.picks[i], 'detail', err)
+        this.failed = _.filter(this.picks, {status: this.status.failed}).length
+        this.message = 'Success: ' + this.success.length + ', Failed: ' + this.failed + '.'
         console.log(err)
-        this.files[i].status = this.status.error
       })
       url = ''        // !!! 重新初始化url，否则不会被下一个hash替换
     },
-    // 执行上传
-    upload() {
-      this.completed = false
-      this.files.forEach((file, i) => {
-        if(this.rapid) this.rapidUpload(file, i)
-        else this.normalUpload(file, i)
+    upload(files) {
+      this.ready = false
+      this.message = this.messages.uploading
+      files.forEach((file) => {
+        if(this.rapid) {
+          this.rapidUpload(file)
+        } else {
+          this.normalUpload(file)
+        }
       })
-      // console.log(this.uploaded)
     },
-    // 结果回传（事件）数据发射到父组件
     result() {
-      this.$emit('result', this.uploaded)
-      this.cancel()
+      this.$emit('result', this.success)
       this.close()
+      this.clear()
     },
-    // 全部取消
-    cancel() {
-      this.warning = ''
-      this.step = this.steps.step1
-      this.choose = true
-      this.completed = false
-      this.uploaded = []
-      this.hit = 0
+    close() {
+      this.$emit('update:visible', false)
     },
-    // 删除选择项
-    remove(i) {
-      this.files[i].ban.push('remove')    // 落选原因
-      this.bans.push(this.files[i])       // 进入落选
-      this.files.splice(i, 1)             // 退出中选
-     },
-    // 监听文件选择框变化
+    clear() {
+      this.picks = []
+      this.bans = []
+      this.ready = false
+      this.failed = 0
+      this.success = []
+    },
+    remove(id) {
+      let i = _.findIndex(this.picks, { id:id })
+      this.picks[i].ban.push('remove')    // 落选原因
+      this.bans.push(this.picks[i])       // 进入落选
+      this.picks.splice(i, 1)             // 退出中选
+    },
+    retry(id) {
+      this.upload(_.filter(this.picks, { id: id }))
+    },
+    again() {
+      this.upload(_.filter(this.picks, {status: this.status.failed}))
+    },
     change(e) {
       // 一、筛选
-      this.choose = false
-      this.files = []
-      this.bans = []
-      this.target = e.target.files
-      let n = e.target.files.length
+      this.clear()
+      this.draft = false
+      this.files = e.target.files
+      let n = this.files.length
       for(let i=0; i<n; i++) {
         let file = {
           id: i,
-          name: this.target[i].name,
-          ext: this.target[i].name.split('.').pop().toLowerCase(),
-          size: this.target[i].size,
-          lastModified: this.target[i].lastModified,
+          name: this.files[i].name,
+          ext: this.files[i].name.split('.').pop().toLowerCase(),
+          size: this.files[i].size,
+          lastModified: this.files[i].lastModified,
+          status: this.status.init,
+          detail: '',
           ban: []
         }
         // 1. 文件类型错误
@@ -278,42 +311,29 @@ export default {
           continue
         }
         // 3. 正常情况
-        this.files.push(file)
+        this.picks.push(file)
       }
-
-      // 4. 数量判断
-      let pick = this.files.length
-      !pick && (this.warning = 'Not enough files.')
-      if(this.max < pick) {
-        this.files = []
-        this.bans = []
-        this.warning = 'Too many files, Max: ' + this.max + ', Picked: ' + pick + '.'
-      } else {
-        // 二、计算
-        let m = this.files.length
-        let j = 0
-        let k = 0
-        this.files.forEach((file) => {
+      // 二、计算
+      if(this.picks.length && this.max >= this.picks.length) {
+        let len_picks = this.picks.length
+        let len_hash = 0
+        let len_unique = 0
+        this.picks.forEach((file) => {
           file.status = this.status.hash
-          browserMd5File(this.target[file.id], (err, md5) => {
+          browserMd5File(this.files[file.id], (err, md5) => {
             if(err) console.log(err)
-            // 剔除 HASH一致的文件
-            if(_.find(this.files, { hash: md5 })) {
+            if(_.find(this.picks, { hash: md5 })) {                           // 剔除HASH一致的文件
               file.ban.push('hash')                                           // 落选原因
               this.bans.push(file)                                            // 进入落选
-              this.files.splice(_.findIndex(this.files, {id: file.id}), 1)    // 退出中选
-              k++                                                             // 计数器
+              this.picks.splice(_.findIndex(this.picks, {id: file.id}), 1)    // 退出中选
+              len_unique++                                                             // 计数器
             }
-            // 提示信息
             file.hash = md5
             file.status = this.status.ready
-            this.step =
-              this.steps.step2 +
-              ', Choose ' + this.target.length +
-              ', Ban ' + this.bans.length +
-              ', Hash '  + (++j) + ' / ' + m +
-              ', Drop '  + k + ' by UNIQUE.'
-            j == m && (this.step += ' Completed!') && (this.completed = true)
+            this.message =
+              'Hash '  + (++len_hash) + ' / ' + len_picks +
+              ', Drop '  + len_unique + ' by UNIQUE.'
+            len_picks == len_hash && (this.message += ' Ready!') && (this.ready = true)
           })
         })
       }
