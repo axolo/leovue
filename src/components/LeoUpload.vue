@@ -4,7 +4,7 @@
       <div class="leo-tips leo-message">
         <span>
           {{message}}
-          <span v-if="failed" class="leo-span-a" @click="clear">[Restart]</span>
+          <span v-if="failed" class="leo-span-a" @click="clear">[Reset]</span>
         </span>
         <button class="leo-button leo-upload" @click="upload(picks)" v-if="ready">Upload</button>
         <button class="leo-button leo-upload" @click="result" v-if="success.length">Send Result</button>
@@ -91,7 +91,6 @@
 /**
   * 多文件异步可筛选支持急速上传的上传组件
   * =======================================
-  * TODO: 支持多层hash_key，如：data.md5
   * 一、筛选
   * --------
   * 1. 赋值
@@ -202,7 +201,8 @@ export default {
       this.$set(this.picks[i], 'status', this.status.uploading)
       this.$set(this.picks[i], 'detail', '')
       axios(this.action).then(res => {
-        if(res.data[this.action.hash_key] === file.hash) {
+        let hash = _.at(res.data, this.action.hash_path)[0]
+        if(hash === file.hash) {
           this.success.push(res.data)
           this.$set(this.picks[i], 'status', this.status.success)
         } else {
@@ -226,7 +226,8 @@ export default {
       this.$set(this.picks[i], 'status', this.status.uploading)
       this.$set(this.picks[i], 'detail', '')
       axios({ method: this.rapid.method, url: url}).then(res => {
-        if(res.data[this.rapid.hash_key] && res.data[this.rapid.hash_key] === file.hash) {
+        let hash = _.at(res.data, this.action.hash_path)[0]
+        if(hash === file.hash) {
           this.success.push(res.data)
           this.$set(this.picks[i], 'status', this.status.rapid)
         } else {

@@ -33,7 +33,7 @@ module.exports = {
           ['/api/leo-upload', 'leo-upload']
         ]
       },
-      ['/changelog', '版本'],
+      ['/changelog', '修订'],
       ['/postscript', '后记']
     ]
   }

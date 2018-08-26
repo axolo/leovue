@@ -19,7 +19,7 @@
     </div>
     <div class="tip">
       若：上传成功后，从文件上传地址返回<code>{ "md5": "25feb93e5e1b18f5596f384f214b1242" }</code>，<br>
-      则：文件上传返回的键名<code>md5</code>即对应data中的<code>hash_key</code>
+      则：文件上传返回的键名<code>md5</code>即对应data中的<code>hash_path</code>
     </div>
     <div class="input">
       <label for="rapid">急传取值地址：</label>
@@ -30,11 +30,11 @@
       </div>
     </div>
     <div class="input">
-      <label for="hash_key">急传返回键名：</label>
-      <input type="text" class="url" name="hash_key" v-model="rapid.hash_key">
+      <label for="hash_path">急传返回键名：</label>
+      <input type="text" class="url" name="hash_path" v-model="rapid.hash_path">
       <div class="tip">
         若：从急传取值地址成功返回<code>{ "md5": "25feb93e5e1b18f5596f384f214b1242" }</code>，<br>
-        则：急传取值返回的键名<code>md5</code>即对应data中的<code>hash_key</code>
+        则：急传取值返回的键名<code>md5</code>即对应data中的<code>hash_path</code>
       </div>
     </div>
     <div class="input">
@@ -62,12 +62,12 @@ export default {
       action: {
         method: 'POST',
         url: 'http://localhost:7001/files',
-        hash_key: 'md5'
+        hash_path: 'md5'
       },
       rapid: {
         method: 'GET',
         url: 'http://localhost:7001/files/%%hash_value%%',
-        hash_key: 'md5'
+        hash_path: 'md5'
       }
     }
   },

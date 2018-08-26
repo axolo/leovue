@@ -32,35 +32,40 @@ leo-upload
       :rapid="rapid"
       @result="result">
     </leo-upload>
+    <h4>文件上传与服务器配置和返回密切相关，参数务必配合服务器</h4>
     <div class="input">
       <label for="action">文件上传地址：</label>
       <input type="text" class="url" name="action" v-model="action.url">
     </div>
-    <div class="tip">
-      若：上传成功后，从文件上传地址返回
-        <code>{ "md5": "25feb93e5e1b18f5596f384f214b1242" }</code>，<br>
-      则：文件上传返回的键名<code>md5</code>即对应data中的<code>hash_key</code>
-    </div>
     <div class="input">
-      <label for="rapid">急传取值地址：</label>
+      <label for="action_hash_path">上传验证键址：</label>
+      <input type="text" class="url" name="action_hash_path" v-model="action.hash_path">
+    </div>
+    <div class="tip">
+      若，上传成功返回：
+      <code>{"data":[{"md5":"25feb93e5e1b18f5596f384f214b1242"}]}</code><br>
+      则，<code>action.hash_path</code>对应为<code>data[0].md5</code><br>
+      强烈建议服务器端再次验证本地hash，以防客户端伪装欺骗！！！
+    </div>
+    <hr>
+    <div class="input">
+      <label for="rapid">急速验证地址：</label>
       <input type="text" class="url" name="rapid" v-model="rapid.url">
       <div class="tip">
-        若：急传取值地址为
-        <code>http://localhost:7001/files?md5=25feb93e5e1b18f5596f384f214b1242</code>，
-        <br>则：地址中的
-        <code>25feb93e5e1b18f5596f384f214b1242</code>
-        即对应data中的<code>%%hash_value%%</code>。
+        <code>%%hash_value%%</code>占位符代表验证地址中的HASH字串</code>，提交时被替换
       </div>
     </div>
     <div class="input">
-      <label for="hash_key">急传返回键名：</label>
-      <input type="text" class="url" name="hash_key" v-model="rapid.hash_key">
+      <label for="rapid_hash_path">急速返回键址：</label>
+      <input type="text" class="url" name="rapid_hash_path" v-model="rapid.hash_path">
       <div class="tip">
-        若：从急传取值地址成功返回
-        <code>{ "md5": "25feb93e5e1b18f5596f384f214b1242" }</code>，<br>
-        则：急传取值返回的键名<code>md5</code>即对应data中的<code>hash_key</code>
+        若，验证成功返回：
+        <code>{"data":[{"md5":"25feb93e5e1b18f5596f384f214b1242"}]}</code><br>
+        则，<code>rapid.hash_path</code>对应为<code>data[0].md5</code><br>
+        本示例配合本文档的 <a href="#服务器">服务器</a> 代码实现，请留意本示例的参数设置
       </div>
     </div>
+    <hr>
     <div class="input">
       <button @click="open">上传</button>
       <button @click="clear" v-if="files.length">清除MD5列表</button>
@@ -89,12 +94,12 @@ export default {
       action: {
         method: 'POST',
         url: 'http://localhost:7001/files',
-        hash_key: 'md5'
+        hash_path: 'md5'
       },
       rapid: {
         method: 'GET',
         url: 'http://localhost:7001/files/%%hash_value%%',
-        hash_key: 'md5'
+        hash_path: 'md5'
       }
     }
   },
@@ -150,22 +155,22 @@ code {
 | action   | Object  | 上传地址参数       |                |      |
 | rapid    | Object  | 启用急传参数       | false = 不启用 |      |
 
-::: tip rapid
-- `url`属性的`%%hash_value%%`: 对应文件哈希值（替换）
-- `hash_key`属性：对应返回的哈希值所在键名
+::: tip action和rapid
+- `%%hash_value%%`: 占位符，对应被验证的哈希值
+- `hash_path`：被验证的哈希值在验证返回数据里的位置
 :::
 
 ::: danger 服务器限制
 请注意，服务器也会对文件上传的格式、大小、数量等做限制，请务必跟服务器配合。
-避免出现显示上传成功，但服务器却没有接受文件，更新对应数据的情况发生。
+避免出现显示上传成功，但服务器却没有接受文件或更新对应数据的情况发生。
 :::
 
 
 事件
 ----
-|  名称  |  值   |             说明             |
-| ------ | ----- | ---------------------------- |
-| result | Array | 成功上传的文件的哈希对象数组 |
+|  名称  |  值   |                   说明                   |
+| ------ | ----- | ---------------------------------------- |
+| result | Array | 上传成功的返回数据（其格式由服务器决定） |
 
 
 服务器
