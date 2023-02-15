@@ -20,7 +20,6 @@ module.exports = {
     repo: 'axolo/leovue',
     repoLabel: 'GitHub',
     lastUpdated: '上次更新',
-    nav:[{ text: '西阁码农', link: 'https://www.woodso.com?from=leovue' }],
     sidebar: [
       [ '/', '首页'],
       {
